@@ -18,8 +18,8 @@ const Multiplayer = () => {
             alignItems: 'center',
             gap: '0.5rem',
             padding: '0.4rem 1.1rem',
-            background: 'rgba(16, 185, 129, 0.12)',
-            border: '1.5px solid rgba(16, 185, 129, 0.35)',
+            background: 'rgba(56, 189, 248, 0.12)',
+            border: '1.5px solid var(--border-glass-bright)',
             borderRadius: '24px',
             fontSize: 'clamp(0.78rem, 2vw, 0.88rem)',
             fontWeight: '800',
@@ -28,7 +28,7 @@ const Multiplayer = () => {
             boxShadow: '0 0 16px var(--color-x-glow)'
           }}>
             <Sparkles size={15} color="var(--color-x)" />
-            <span>Real-Time Botanical Arena</span>
+            <span>Real-Time Battle Arena</span>
           </div>
 
           <h1 style={{
@@ -36,7 +36,8 @@ const Multiplayer = () => {
             fontWeight: '900',
             letterSpacing: '-0.02em',
             marginBottom: '0.4rem',
-            lineHeight: '1.15'
+            lineHeight: '1.15',
+            color: 'var(--text-primary)'
           }}>
             Multiplayer Mode
           </h1>
@@ -75,8 +76,8 @@ const Multiplayer = () => {
                 width: '68px',
                 height: '68px',
                 borderRadius: '22px',
-                background: 'rgba(16, 185, 129, 0.14)',
-                border: '1.5px solid rgba(16, 185, 129, 0.4)',
+                background: 'rgba(56, 189, 248, 0.14)',
+                border: '1.5px solid rgba(56, 189, 248, 0.4)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -135,8 +136,8 @@ const Multiplayer = () => {
                 width: '68px',
                 height: '68px',
                 borderRadius: '22px',
-                background: 'rgba(245, 158, 11, 0.14)',
-                border: '1.5px solid rgba(245, 158, 11, 0.4)',
+                background: 'rgba(129, 140, 248, 0.14)',
+                border: '1.5px solid rgba(129, 140, 248, 0.4)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Leaf, ArrowLeft } from 'lucide-react';
+import { Gamepad2, ArrowLeft } from 'lucide-react';
 import ThreeDotMenu from './ThreeDotMenu';
 import { playSound } from '../utils/sound';
 
@@ -38,7 +38,7 @@ const Header = ({
             onClick={() => playSound('click')}
           >
             <div className="header-brand-logo">
-              <Leaf size={22} color="var(--color-x)" />
+              <Gamepad2 size={22} color="var(--color-x)" />
             </div>
             <span style={{ fontSize: '1.25rem', fontWeight: '900', letterSpacing: '-0.02em' }}>
               <span style={{ color: 'var(--color-x)' }}>TIC</span>

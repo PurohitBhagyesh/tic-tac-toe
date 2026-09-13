@@ -95,12 +95,12 @@ const CreateRoom = () => {
                 width: '60px',
                 height: '60px',
                 borderRadius: '18px',
-                background: 'rgba(16, 185, 129, 0.14)',
+                background: 'rgba(56, 189, 248, 0.14)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 margin: '0 auto 1rem',
-                border: '1.5px solid rgba(16, 185, 129, 0.4)',
+                border: '1.5px solid rgba(56, 189, 248, 0.4)',
                 boxShadow: '0 0 20px var(--color-x-glow)'
               }}>
                 <Sparkles size={30} color="var(--color-x)" />

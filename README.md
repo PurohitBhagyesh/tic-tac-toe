@@ -20,22 +20,22 @@ A modern, production-ready, full-stack Tic-Tac-Toe web application featuring **S
    - Opponents can scan with their phone camera using the integrated scanner or join directly via share link.
 5. **Lobby & Ready System**:
    - Real-time synchronization of player names, symbols (X / O), and ready states.
-   - Match auto-starts when both players are connected and ready.
-6. **5-Round Competitive Matches**:
+   - Match starts when both players are ready and host initiates.
+6. **5-Round Competitive Matches & Turn Timers**:
    - Structured 5-round matches with live scoreboards (`Player 1: 3` vs `Player 2: 2`).
+   - Turn Timers: Customizable (30s, 1m, 2m) in Singleplayer; Mandatory 2-minute limit per turn in Multiplayer.
    - Alternating starting turns each round.
-   - Round win banners and round-to-round transitions.
 7. **Rematch & Forfeit System**:
    - Mutual rematch agreement system (restarts match only when both players accept).
-   - "Give Up" forfeit modal declaring opponent the winner.
+   - "Give Up" forfeit modal and timeout loss detection.
    - Three-dot game options menu with interactive Game Rules modal.
 8. **PostgreSQL / Supabase Integration**:
    - Automatic database table creation (`rooms`, `players`, `matches`, `rounds`).
    - Foreign keys, parameterized SQL queries, and connection pooling with `pg`.
-9. **Responsive Cyber Gaming UI**:
-   - Sleek dark theme with neon cyan (`#00f0ff`) and hot coral (`#ff0055`) accents.
+9. **Aesthetic Bluish & White UI**:
+   - Deep Sapphire Navy & Crisp White in Dark Mode; Ice Blue & Snow White in Light Mode.
    - Glassmorphism, animations, confetti celebrations, and touch-friendly controls.
-   - Flawlessly responsive across mobile (360px, 390px, 430px), tablets (768px), and desktops.
+   - Live Deployment: **[https://tictactoegamearena.netlify.app/](https://tictactoegamearena.netlify.app/)**
 
 ---
 

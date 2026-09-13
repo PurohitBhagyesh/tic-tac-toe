@@ -19,6 +19,7 @@ const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
 // Allowed origins for CORS (supports local development and Netlify production domains)
 const allowedOrigins = [
   CLIENT_URL,
+  'https://tictactoegamearena.netlify.app',
   'http://localhost:5173',
   'http://localhost:3000',
   'http://127.0.0.1:5173',

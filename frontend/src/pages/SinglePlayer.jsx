@@ -187,12 +187,12 @@ const SinglePlayer = () => {
                 width: '60px',
                 height: '60px',
                 borderRadius: '18px',
-                background: 'rgba(16, 185, 129, 0.12)',
+                background: 'rgba(56, 189, 248, 0.14)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 margin: '0 auto 1rem',
-                border: '1.5px solid rgba(16, 185, 129, 0.4)',
+                border: '1.5px solid rgba(56, 189, 248, 0.4)',
                 boxShadow: '0 0 20px var(--color-x-glow)'
               }}>
                 <Bot size={30} color="var(--color-x)" />
@@ -238,7 +238,7 @@ const SinglePlayer = () => {
                           padding: '0.85rem 0.5rem',
                           borderRadius: '14px',
                           border: isSelected ? '1.5px solid var(--color-x)' : '1px solid var(--border-glass)',
-                          background: isSelected ? 'rgba(16, 185, 129, 0.15)' : 'var(--bg-input)',
+                          background: isSelected ? 'rgba(56, 189, 248, 0.15)' : 'var(--bg-input)',
                           color: isSelected ? 'var(--color-x)' : 'var(--text-secondary)',
                           fontWeight: '800',
                           fontSize: '0.95rem',
@@ -285,7 +285,7 @@ const SinglePlayer = () => {
                           padding: '0.75rem 0.4rem',
                           borderRadius: '14px',
                           border: isSelected ? '1.5px solid var(--color-x)' : '1px solid var(--border-glass)',
-                          background: isSelected ? 'rgba(16, 185, 129, 0.15)' : 'var(--bg-input)',
+                          background: isSelected ? 'rgba(56, 189, 248, 0.15)' : 'var(--bg-input)',
                           color: isSelected ? 'var(--color-x)' : 'var(--text-secondary)',
                           fontWeight: '800',
                           fontSize: '0.92rem',
@@ -382,8 +382,8 @@ const SinglePlayer = () => {
                     color: isTimeCritical ? '#ef4444' : isTimeWarning ? '#f59e0b' : 'var(--color-x)',
                     padding: '0.15rem 0.6rem',
                     borderRadius: '12px',
-                    background: isTimeCritical ? 'rgba(239, 68, 68, 0.15)' : isTimeWarning ? 'rgba(245, 158, 11, 0.15)' : 'rgba(16, 185, 129, 0.12)',
-                    border: `1px solid ${isTimeCritical ? '#ef4444' : isTimeWarning ? '#f59e0b' : 'rgba(16, 185, 129, 0.3)'}`,
+                    background: isTimeCritical ? 'rgba(239, 68, 68, 0.15)' : isTimeWarning ? 'rgba(245, 158, 11, 0.15)' : 'rgba(56, 189, 248, 0.12)',
+                    border: `1px solid ${isTimeCritical ? '#ef4444' : isTimeWarning ? '#f59e0b' : 'rgba(56, 189, 248, 0.3)'}`,
                     boxShadow: isTimeCritical ? '0 0 12px rgba(239, 68, 68, 0.4)' : 'none',
                     transition: 'all 0.2s ease',
                   }}>
@@ -408,7 +408,7 @@ const SinglePlayer = () => {
                       ? 'linear-gradient(90deg, #ef4444, #dc2626)'
                       : isTimeWarning
                       ? 'linear-gradient(90deg, #f59e0b, #d97706)'
-                      : 'linear-gradient(90deg, var(--color-x), #34d399)',
+                      : 'linear-gradient(90deg, var(--color-x), #60a5fa)',
                     transition: 'width 1s linear, background 0.3s ease',
                     boxShadow: isTimeCritical ? '0 0 8px #ef4444' : '0 0 8px var(--color-x-glow)',
                   }} />

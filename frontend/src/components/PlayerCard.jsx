@@ -36,9 +36,9 @@ const PlayerCard = ({
             borderRadius: '10px',
             fontSize: '0.68rem',
             fontWeight: '800',
-            background: 'rgba(16, 185, 129, 0.18)',
+            background: 'rgba(56, 189, 248, 0.18)',
             color: 'var(--color-x)',
-            border: '1px solid rgba(16, 185, 129, 0.4)',
+            border: '1px solid rgba(56, 189, 248, 0.4)',
             letterSpacing: '0.04em'
           }}>
             YOU

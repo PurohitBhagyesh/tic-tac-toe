@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bot, Users, Play, Sprout, User, Edit3, Check, Sparkles } from 'lucide-react';
+import { Bot, Users, Play, Swords, User, Edit3, Check, Sparkles } from 'lucide-react';
 import Button from '../components/Button';
 import Header from '../components/Header';
 import { getStoredPlayerName, setStoredPlayerName } from '../utils/storage';
@@ -44,8 +44,8 @@ const Home = () => {
             alignItems: 'center',
             gap: '0.5rem',
             padding: '0.4rem 1.1rem',
-            background: 'rgba(16, 185, 129, 0.12)',
-            border: '1.5px solid rgba(16, 185, 129, 0.35)',
+            background: 'rgba(56, 189, 248, 0.12)',
+            border: '1.5px solid var(--border-glass-bright)',
             borderRadius: '24px',
             fontSize: 'clamp(0.78rem, 2vw, 0.88rem)',
             fontWeight: '800',
@@ -53,8 +53,8 @@ const Home = () => {
             marginBottom: '0.85rem',
             boxShadow: '0 0 16px var(--color-x-glow)'
           }}>
-            <Sprout size={16} color="var(--color-x)" />
-            <span>5-Round Botanical Arena</span>
+            <Swords size={16} color="var(--color-x)" />
+            <span>5-Round Battle Arena</span>
           </div>
 
           <h1 style={{
@@ -62,7 +62,8 @@ const Home = () => {
             fontWeight: '900',
             letterSpacing: '-0.03em',
             marginBottom: '0.4rem',
-            lineHeight: '1.15'
+            lineHeight: '1.15',
+            color: 'var(--text-primary)'
           }}>
             Welcome to <span className="title-gradient">Tic-Tac-Toe</span>
           </h1>
@@ -89,7 +90,7 @@ const Home = () => {
               width: 'clamp(42px, 6vw, 48px)',
               height: 'clamp(42px, 6vw, 48px)',
               borderRadius: '14px',
-              background: 'rgba(16, 185, 129, 0.15)',
+              background: 'rgba(56, 189, 248, 0.15)',
               border: '1.5px solid var(--border-glass-bright)',
               display: 'flex',
               alignItems: 'center',
@@ -214,8 +215,8 @@ const Home = () => {
                 width: '68px',
                 height: '68px',
                 borderRadius: '22px',
-                background: 'rgba(16, 185, 129, 0.14)',
-                border: '1.5px solid rgba(16, 185, 129, 0.4)',
+                background: 'rgba(56, 189, 248, 0.14)',
+                border: '1.5px solid rgba(56, 189, 248, 0.4)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -253,7 +254,7 @@ const Home = () => {
             </Button>
           </div>
 
-          {/* Card 2: Multiplayer (Amber Blossom Nature) */}
+          {/* Card 2: Multiplayer (Royal Indigo Bluish) */}
           <div className="glass-card" style={{
             padding: '2.25rem 1.75rem',
             display: 'flex',
@@ -275,8 +276,8 @@ const Home = () => {
                 width: '68px',
                 height: '68px',
                 borderRadius: '22px',
-                background: 'rgba(245, 158, 11, 0.14)',
-                border: '1.5px solid rgba(245, 158, 11, 0.4)',
+                background: 'rgba(129, 140, 248, 0.14)',
+                border: '1.5px solid rgba(129, 140, 248, 0.4)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',

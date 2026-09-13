@@ -284,7 +284,7 @@ const Game = () => {
             <div style={{
               margin: '0.5rem 0',
               padding: '0.6rem 1.4rem',
-              background: 'rgba(16, 185, 129, 0.15)',
+              background: 'rgba(56, 189, 248, 0.15)',
               border: '1.5px solid var(--border-glass-bright)',
               borderRadius: '24px',
               textAlign: 'center',
@@ -336,8 +336,8 @@ const Game = () => {
                   color: isTimeCritical ? '#ef4444' : isTimeWarning ? '#f59e0b' : 'var(--color-x)',
                   padding: '0.15rem 0.6rem',
                   borderRadius: '12px',
-                  background: isTimeCritical ? 'rgba(239, 68, 68, 0.15)' : isTimeWarning ? 'rgba(245, 158, 11, 0.15)' : 'rgba(16, 185, 129, 0.12)',
-                  border: `1px solid ${isTimeCritical ? '#ef4444' : isTimeWarning ? '#f59e0b' : 'rgba(16, 185, 129, 0.3)'}`,
+                  background: isTimeCritical ? 'rgba(239, 68, 68, 0.15)' : isTimeWarning ? 'rgba(245, 158, 11, 0.15)' : 'rgba(56, 189, 248, 0.12)',
+                  border: `1px solid ${isTimeCritical ? '#ef4444' : isTimeWarning ? '#f59e0b' : 'rgba(56, 189, 248, 0.3)'}`,
                   boxShadow: isTimeCritical ? '0 0 12px rgba(239, 68, 68, 0.4)' : 'none',
                   transition: 'all 0.2s ease',
                 }}>
@@ -362,7 +362,7 @@ const Game = () => {
                     ? 'linear-gradient(90deg, #ef4444, #dc2626)'
                     : isTimeWarning
                     ? 'linear-gradient(90deg, #f59e0b, #d97706)'
-                    : 'linear-gradient(90deg, var(--color-x), #34d399)',
+                    : 'linear-gradient(90deg, var(--color-x), #60a5fa)',
                   transition: 'width 1s linear, background 0.3s ease',
                   boxShadow: isTimeCritical ? '0 0 8px #ef4444' : '0 0 8px var(--color-x-glow)',
                 }} />
