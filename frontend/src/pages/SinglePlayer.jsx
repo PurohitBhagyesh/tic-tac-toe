@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import confetti from 'canvas-confetti';
-import { Bot, RotateCcw, Home as HomeIcon, Check, Sparkles } from 'lucide-react';
+import { Bot, RotateCcw, Home as HomeIcon, Check, Timer, Clock, AlertTriangle, Sparkles } from 'lucide-react';
 import Header from '../components/Header';
 import GameBoard from '../components/GameBoard';
 import PlayerCard from '../components/PlayerCard';
@@ -18,6 +18,8 @@ import {
   setStoredPlayerName,
   getStoredDifficulty,
   setStoredDifficulty,
+  getStoredSinglePlayerTimer,
+  setStoredSinglePlayerTimer,
 } from '../utils/storage';
 import { playSound } from '../utils/sound';
 
@@ -28,6 +30,7 @@ const SinglePlayer = () => {
   const [isConfigured, setIsConfigured] = useState(false);
   const [playerName, setPlayerName] = useState(getStoredPlayerName() || 'Bhagyesh');
   const [difficulty, setDifficulty] = useState(getStoredDifficulty() || 'medium');
+  const [timerSetting, setTimerSetting] = useState(getStoredSinglePlayerTimer() || 60);
 
   // Game state
   const [board, setBoard] = useState(resetBoard());
@@ -36,6 +39,14 @@ const SinglePlayer = () => {
   const [winnerInfo, setWinnerInfo] = useState(null);
   const [isDraw, setIsDraw] = useState(false);
   const [scores, setScores] = useState({ human: 0, ai: 0, draws: 0 });
+  const [timeLeft, setTimeLeft] = useState(timerSetting);
+
+  // Format seconds to mm:ss or 0:ss
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  };
 
   // Finish setup
   const handleFinishSetup = (e) => {
@@ -44,8 +55,44 @@ const SinglePlayer = () => {
     setPlayerName(finalName);
     setStoredPlayerName(finalName);
     setStoredDifficulty(difficulty);
+    setStoredSinglePlayerTimer(timerSetting);
+    setTimeLeft(timerSetting);
     setIsConfigured(true);
     playSound('pop');
+  };
+
+  // Turn Timer effect for Human Player (X)
+  useEffect(() => {
+    if (!isConfigured || currentTurn !== 'X' || winnerInfo || isDraw || isAiThinking) {
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          // Time expired!
+          clearInterval(interval);
+          handlePlayerTimeout();
+          return 0;
+        }
+
+        // Sound cues for final 5 seconds
+        if (prev <= 6 && prev > 1) {
+          playSound('tick');
+        }
+
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [isConfigured, currentTurn, winnerInfo, isDraw, isAiThinking]);
+
+  // Handle Player Timeout Loss
+  const handlePlayerTimeout = () => {
+    playSound('timeout');
+    setWinnerInfo({ winner: 'O', timeout: true });
+    setScores((prev) => ({ ...prev, ai: prev.ai + 1 }));
   };
 
   // Human player move
@@ -102,13 +149,14 @@ const SinglePlayer = () => {
           playSound('draw');
         } else {
           setCurrentTurn('X');
+          setTimeLeft(timerSetting); // Reset timer for player's new turn
         }
       }
       setIsAiThinking(false);
     }, 420);
 
     return () => clearTimeout(timer);
-  }, [currentTurn, isConfigured, board, difficulty, winnerInfo, isDraw]);
+  }, [currentTurn, isConfigured, board, difficulty, winnerInfo, isDraw, timerSetting]);
 
   // Rematch
   const handleRematch = () => {
@@ -117,8 +165,14 @@ const SinglePlayer = () => {
     setWinnerInfo(null);
     setIsDraw(false);
     setCurrentTurn('X');
+    setTimeLeft(timerSetting);
     setIsAiThinking(false);
   };
+
+  // Timer color and progress calculation
+  const timerPercentage = Math.max(0, Math.min(100, (timeLeft / timerSetting) * 100));
+  const isTimeCritical = timeLeft <= 5 && currentTurn === 'X' && !winnerInfo && !isDraw;
+  const isTimeWarning = timeLeft <= 10 && currentTurn === 'X' && !winnerInfo && !isDraw;
 
   return (
     <div className="app-container">
@@ -127,18 +181,18 @@ const SinglePlayer = () => {
       <main className="main-content">
         {!isConfigured ? (
           /* Setup View */
-          <div className="glass-card" style={{ width: '100%', maxWidth: '440px', padding: '2.25rem 2rem' }}>
+          <div className="glass-card" style={{ width: '100%', maxWidth: '460px', padding: '2.25rem 2rem' }}>
             <div style={{ textAlign: 'center', marginBottom: '1.75rem' }}>
               <div style={{
                 width: '60px',
                 height: '60px',
                 borderRadius: '18px',
-                background: 'rgba(56, 189, 248, 0.12)',
+                background: 'rgba(16, 185, 129, 0.12)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 margin: '0 auto 1rem',
-                border: '1.5px solid rgba(56, 189, 248, 0.4)',
+                border: '1.5px solid rgba(16, 185, 129, 0.4)',
                 boxShadow: '0 0 20px var(--color-x-glow)'
               }}>
                 <Bot size={30} color="var(--color-x)" />
@@ -147,11 +201,12 @@ const SinglePlayer = () => {
                 Singleplayer Setup
               </h2>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.92rem', marginTop: '0.25rem' }}>
-                Set your name and select difficulty level
+                Set your name, difficulty, and turn timer
               </p>
             </div>
 
             <form onSubmit={handleFinishSetup} style={{ display: 'flex', flexDirection: 'column', gap: '1.35rem' }}>
+              {/* Player Name */}
               <div className="input-group">
                 <label className="input-label" htmlFor="player-name">Player Name</label>
                 <input
@@ -165,6 +220,7 @@ const SinglePlayer = () => {
                 />
               </div>
 
+              {/* Difficulty Selector */}
               <div className="input-group">
                 <label className="input-label">Difficulty</label>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.6rem' }}>
@@ -182,7 +238,7 @@ const SinglePlayer = () => {
                           padding: '0.85rem 0.5rem',
                           borderRadius: '14px',
                           border: isSelected ? '1.5px solid var(--color-x)' : '1px solid var(--border-glass)',
-                          background: isSelected ? 'rgba(56, 189, 248, 0.15)' : 'var(--bg-input)',
+                          background: isSelected ? 'rgba(16, 185, 129, 0.15)' : 'var(--bg-input)',
                           color: isSelected ? 'var(--color-x)' : 'var(--text-secondary)',
                           fontWeight: '800',
                           fontSize: '0.95rem',
@@ -197,6 +253,56 @@ const SinglePlayer = () => {
                       >
                         {lvl}
                         {isSelected && <Check size={14} />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Turn Timer Selector (30s, 1m, 2m) */}
+              <div className="input-group">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                  <label className="input-label" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                    <Timer size={16} color="var(--color-x)" /> Turn Timer (Min 30s • Max 2m)
+                  </label>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.6rem' }}>
+                  {[
+                    { label: '30 Sec', value: 30, desc: 'Fast Pace' },
+                    { label: '1 Min', value: 60, desc: 'Standard' },
+                    { label: '2 Min', value: 120, desc: 'Strategic' },
+                  ].map((option) => {
+                    const isSelected = timerSetting === option.value;
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => {
+                          playSound('click');
+                          setTimerSetting(option.value);
+                        }}
+                        style={{
+                          padding: '0.75rem 0.4rem',
+                          borderRadius: '14px',
+                          border: isSelected ? '1.5px solid var(--color-x)' : '1px solid var(--border-glass)',
+                          background: isSelected ? 'rgba(16, 185, 129, 0.15)' : 'var(--bg-input)',
+                          color: isSelected ? 'var(--color-x)' : 'var(--text-secondary)',
+                          fontWeight: '800',
+                          fontSize: '0.92rem',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          gap: '0.2rem',
+                          boxShadow: isSelected ? '0 0 15px var(--color-x-glow)' : 'none'
+                        }}
+                      >
+                        <span>{option.label}</span>
+                        <span style={{ fontSize: '0.72rem', opacity: 0.75, fontWeight: '500' }}>
+                          {option.desc}
+                        </span>
+                        {isSelected && <Check size={14} style={{ marginTop: '2px' }} />}
                       </button>
                     );
                   })}
@@ -238,12 +344,84 @@ const SinglePlayer = () => {
               />
             </div>
 
+            {/* Turn Timer Bar & Badge */}
+            {!winnerInfo && !isDraw && (
+              <div style={{
+                width: '100%',
+                maxWidth: '380px',
+                margin: '0.5rem 0 0.75rem',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.35rem',
+              }}>
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  padding: '0 0.25rem',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <Timer
+                      size={16}
+                      color={isTimeCritical ? '#ef4444' : isTimeWarning ? '#f59e0b' : 'var(--color-x)'}
+                      style={{ animation: isTimeCritical ? 'pulse 0.6s infinite' : 'none' }}
+                    />
+                    <span style={{
+                      fontSize: '0.82rem',
+                      fontWeight: '700',
+                      color: currentTurn === 'X' ? 'var(--text-primary)' : 'var(--text-secondary)'
+                    }}>
+                      {currentTurn === 'X' ? 'Your Turn Time' : 'AI Turn (Paused)'}
+                    </span>
+                  </div>
+
+                  <span style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.95rem',
+                    fontWeight: '900',
+                    color: isTimeCritical ? '#ef4444' : isTimeWarning ? '#f59e0b' : 'var(--color-x)',
+                    padding: '0.15rem 0.6rem',
+                    borderRadius: '12px',
+                    background: isTimeCritical ? 'rgba(239, 68, 68, 0.15)' : isTimeWarning ? 'rgba(245, 158, 11, 0.15)' : 'rgba(16, 185, 129, 0.12)',
+                    border: `1px solid ${isTimeCritical ? '#ef4444' : isTimeWarning ? '#f59e0b' : 'rgba(16, 185, 129, 0.3)'}`,
+                    boxShadow: isTimeCritical ? '0 0 12px rgba(239, 68, 68, 0.4)' : 'none',
+                    transition: 'all 0.2s ease',
+                  }}>
+                    {formatTime(timeLeft)}
+                  </span>
+                </div>
+
+                {/* Progress bar */}
+                <div style={{
+                  width: '100%',
+                  height: '6px',
+                  borderRadius: '3px',
+                  background: 'rgba(255, 255, 255, 0.08)',
+                  overflow: 'hidden',
+                  border: '1px solid var(--border-glass)',
+                }}>
+                  <div style={{
+                    width: `${timerPercentage}%`,
+                    height: '100%',
+                    borderRadius: '3px',
+                    background: isTimeCritical
+                      ? 'linear-gradient(90deg, #ef4444, #dc2626)'
+                      : isTimeWarning
+                      ? 'linear-gradient(90deg, #f59e0b, #d97706)'
+                      : 'linear-gradient(90deg, var(--color-x), #34d399)',
+                    transition: 'width 1s linear, background 0.3s ease',
+                    boxShadow: isTimeCritical ? '0 0 8px #ef4444' : '0 0 8px var(--color-x-glow)',
+                  }} />
+                </div>
+              </div>
+            )}
+
             {/* Turn / Outcome Commentary */}
             {!winnerInfo && !isDraw ? (
               <PlayerStatus
-                message={currentTurn === 'X' ? 'Your Turn' : 'AI is thinking...'}
+                message={currentTurn === 'X' ? (isTimeCritical ? '⚠️ Hurry up! Time running out!' : 'Your Turn') : 'AI is thinking...'}
                 isThinking={isAiThinking}
-                highlight={currentTurn === 'X' ? 'x' : 'o'}
+                highlight={currentTurn === 'X' ? (isTimeCritical ? 'o' : 'x') : 'o'}
               />
             ) : (
               <div style={{ margin: '0.5rem 0', textAlign: 'center' }}>
@@ -253,9 +431,23 @@ const SinglePlayer = () => {
                   </h3>
                 )}
                 {winnerInfo?.winner === 'O' && (
-                  <h3 style={{ fontSize: '1.4rem', fontWeight: '900', color: 'var(--color-o)', textShadow: '0 0 16px var(--color-o-glow)' }}>
-                    💀 You Lose!
-                  </h3>
+                  <div style={{
+                    padding: '0.65rem 1.25rem',
+                    borderRadius: '16px',
+                    background: winnerInfo?.timeout ? 'rgba(239, 68, 68, 0.15)' : 'rgba(245, 158, 11, 0.12)',
+                    border: `1.5px solid ${winnerInfo?.timeout ? 'rgba(239, 68, 68, 0.4)' : 'rgba(245, 158, 11, 0.35)'}`,
+                    boxShadow: winnerInfo?.timeout ? '0 0 20px rgba(239, 68, 68, 0.3)' : '0 0 16px var(--color-o-glow)',
+                    display: 'inline-block'
+                  }}>
+                    <h3 style={{
+                      fontSize: '1.3rem',
+                      fontWeight: '900',
+                      color: winnerInfo?.timeout ? '#ef4444' : 'var(--color-o)',
+                      margin: 0,
+                    }}>
+                      {winnerInfo?.timeout ? '⏳ You ran out of time! You lose!' : '💀 You Lose!'}
+                    </h3>
+                  </div>
                 )}
                 {isDraw && (
                   <h3 style={{ fontSize: '1.4rem', fontWeight: '900', color: 'var(--text-secondary)' }}>

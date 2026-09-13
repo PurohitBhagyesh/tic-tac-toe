@@ -203,6 +203,31 @@ export const setupSocketHandlers = (io) => {
     });
 
     /**
+     * Turn Timeout (Mandatory 2-minute limit per turn)
+     */
+    socket.on('game:timeout', async ({ roomCode, playerId }) => {
+      try {
+        const result = await gameService.handleTimeout(roomCode, playerId);
+        if (!result.success) {
+          socket.emit('game:error', { message: result.error });
+          return;
+        }
+
+        io.to(`room_${roomCode}`).emit('game:matchEnd', {
+          room: result.room,
+          timeout: true,
+          timedOutPlayer: result.timedOutPlayer,
+          matchWinner: result.room.match.matchWinner,
+          scores: result.room.match.scores,
+          message: `${result.timedOutPlayer?.name || 'Player'} ran out of time! (2 min limit)`
+        });
+      } catch (error) {
+        console.error('[Socket game:timeout Error]:', error.message);
+        socket.emit('game:error', { message: 'Failed to process timeout' });
+      }
+    });
+
+    /**
      * Rematch Request
      */
     socket.on('game:rematch', async ({ roomCode, playerId }) => {

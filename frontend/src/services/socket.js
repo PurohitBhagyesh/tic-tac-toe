@@ -95,6 +95,11 @@ export const socketService = {
     s.emit('game:giveUp', { roomCode, playerId });
   },
 
+  sendTimeout(roomCode, playerId) {
+    const s = getSocket();
+    s.emit('game:timeout', { roomCode, playerId });
+  },
+
   sendRematch(roomCode, playerId) {
     const s = getSocket();
     s.emit('game:rematch', { roomCode, playerId });

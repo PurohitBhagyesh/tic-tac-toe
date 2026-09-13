@@ -3,6 +3,7 @@ const KEYS = {
   DIFFICULTY: 'ttt_difficulty',
   LAST_ROOM_CODE: 'ttt_last_room',
   PLAYER_ID: 'ttt_player_id',
+  SINGLE_PLAYER_TIMER: 'ttt_sp_timer',
 };
 
 export const getStoredPlayerName = () => {
@@ -46,5 +47,24 @@ export const getStoredPlayerId = () => {
 export const setStoredPlayerId = (id) => {
   try {
     if (id) localStorage.setItem(KEYS.PLAYER_ID, id);
+  } catch (e) {}
+};
+
+export const getStoredSinglePlayerTimer = () => {
+  try {
+    const val = localStorage.getItem(KEYS.SINGLE_PLAYER_TIMER);
+    const parsed = parseInt(val, 10);
+    if (!isNaN(parsed) && [30, 60, 120].includes(parsed)) {
+      return parsed;
+    }
+    return 60; // default 1 minute
+  } catch (e) {
+    return 60;
+  }
+};
+
+export const setStoredSinglePlayerTimer = (seconds) => {
+  try {
+    if (seconds) localStorage.setItem(KEYS.SINGLE_PLAYER_TIMER, String(seconds));
   } catch (e) {}
 };

@@ -157,6 +157,11 @@ const Result = () => {
                   <h1 style={{ fontSize: '2.1rem', fontWeight: '900', color: 'var(--color-x)', letterSpacing: '-0.02em', textShadow: '0 0 20px var(--color-x-glow)' }}>
                     You Are The Winner!
                   </h1>
+                  {match?.timeout && (
+                    <p style={{ color: 'var(--color-x)', fontSize: '0.95rem', fontWeight: '700', marginTop: '0.4rem' }}>
+                      ⏳ Opponent ran out of time (2m limit)
+                    </p>
+                  )}
                 </>
               )}
 
@@ -179,6 +184,11 @@ const Result = () => {
                   <h1 style={{ fontSize: '2.1rem', fontWeight: '900', color: 'var(--color-o)', letterSpacing: '-0.02em', textShadow: '0 0 20px var(--color-o-glow)' }}>
                     You Are The Loser!
                   </h1>
+                  {match?.timeout && (
+                    <p style={{ color: '#ef4444', fontSize: '0.95rem', fontWeight: '700', marginTop: '0.4rem' }}>
+                      ⏳ You ran out of time (2m limit)
+                    </p>
+                  )}
                 </>
               )}
 

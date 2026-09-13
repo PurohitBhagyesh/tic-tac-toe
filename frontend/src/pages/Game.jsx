@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import confetti from 'canvas-confetti';
-import { Flag, Play, Loader2 } from 'lucide-react';
+import { Flag, Play, Loader2, Timer, Clock } from 'lucide-react';
 import Header from '../components/Header';
 import GameBoard from '../components/GameBoard';
 import PlayerCard from '../components/PlayerCard';
@@ -25,8 +25,48 @@ const Game = () => {
   const [roundNotification, setRoundNotification] = useState(null);
   const [opponentDisconnected, setOpponentDisconnected] = useState(false);
   const [isTransitioningRound, setIsTransitioningRound] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(120);
 
   const currentUserId = currentUser?.id || getStoredPlayerId();
+
+  // Calculate synchronized remaining time from turnStartedAt
+  useEffect(() => {
+    if (!room?.match || room.match.status !== 'in_progress') return;
+
+    const startedAt = room.match.turnStartedAt || Date.now();
+    const elapsed = Math.floor((Date.now() - startedAt) / 1000);
+    const initialRemaining = Math.max(0, 120 - elapsed);
+    setTimeLeft(initialRemaining);
+
+    const interval = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          // If it's my turn and timer reached 0, emit timeout
+          const p1 = room.players?.[0];
+          const isP1 = currentUser?.id === p1?.id;
+          const mySym = isP1 ? 'X' : 'O';
+          if (room.match.currentTurn === mySym && room.match.status === 'in_progress') {
+            playSound('timeout');
+            socketService.sendTimeout(roomCode, currentUser.id);
+          }
+          return 0;
+        }
+
+        // Sound cue for final 5 seconds on user's turn
+        const p1 = room.players?.[0];
+        const isP1 = currentUser?.id === p1?.id;
+        const mySym = isP1 ? 'X' : 'O';
+        if (room.match.currentTurn === mySym && prev <= 6 && prev > 1) {
+          playSound('tick');
+        }
+
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [room?.match?.currentTurn, room?.match?.turnStartedAt, room?.match?.status, currentUser, roomCode]);
 
   // Load and join room socket
   useEffect(() => {
@@ -177,6 +217,15 @@ const Game = () => {
   }
 
   const isRoundEnded = match.status === 'round_ended';
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  };
+  const timerPercentage = Math.max(0, Math.min(100, (timeLeft / 120) * 100));
+  const isTimeCritical = timeLeft <= 10 && !isRoundEnded;
+  const isTimeWarning = timeLeft <= 30 && !isRoundEnded;
+  const activePlayerName = match.currentTurn === 'X' ? (player1?.name || 'Player 1') : (player2?.name || 'Player 2');
 
   return (
     <div className="app-container">
@@ -227,7 +276,7 @@ const Game = () => {
           {/* Turn & Match Commentary */}
           {!isRoundEnded ? (
             <PlayerStatus
-              message={isMyTurn ? 'Your Turn' : "Opponent's Turn"}
+              message={isMyTurn ? (isTimeCritical ? '⚠️ Hurry up! 2m Timer Running Out!' : 'Your Turn') : `${activePlayerName}'s Turn`}
               isThinking={!isMyTurn}
               highlight={isMyTurn ? (mySymbol === 'X' ? 'x' : 'o') : null}
             />
@@ -246,6 +295,78 @@ const Game = () => {
                   ? '🤝 Round Draw!'
                   : `🎉 ${match.roundWinner === 'X' ? (player1?.name || 'Player 1') : (player2?.name || 'Player 2')} won Round ${match.currentRound}!`}
               </span>
+            </div>
+          )}
+
+          {/* Mandatory 2-Minute Turn Timer Bar & Badge */}
+          {!isRoundEnded && (
+            <div style={{
+              width: '100%',
+              maxWidth: '380px',
+              margin: '0.4rem 0 0.75rem',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.35rem',
+            }}>
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: '0 0.25rem',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <Timer
+                    size={16}
+                    color={isTimeCritical ? '#ef4444' : isTimeWarning ? '#f59e0b' : 'var(--color-x)'}
+                    style={{ animation: isTimeCritical ? 'pulse 0.6s infinite' : 'none' }}
+                  />
+                  <span style={{
+                    fontSize: '0.82rem',
+                    fontWeight: '700',
+                    color: isMyTurn ? 'var(--text-primary)' : 'var(--text-secondary)'
+                  }}>
+                    {isMyTurn ? 'Your Turn Time (2m limit)' : `${activePlayerName}'s Time (2m limit)`}
+                  </span>
+                </div>
+
+                <span style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '0.95rem',
+                  fontWeight: '900',
+                  color: isTimeCritical ? '#ef4444' : isTimeWarning ? '#f59e0b' : 'var(--color-x)',
+                  padding: '0.15rem 0.6rem',
+                  borderRadius: '12px',
+                  background: isTimeCritical ? 'rgba(239, 68, 68, 0.15)' : isTimeWarning ? 'rgba(245, 158, 11, 0.15)' : 'rgba(16, 185, 129, 0.12)',
+                  border: `1px solid ${isTimeCritical ? '#ef4444' : isTimeWarning ? '#f59e0b' : 'rgba(16, 185, 129, 0.3)'}`,
+                  boxShadow: isTimeCritical ? '0 0 12px rgba(239, 68, 68, 0.4)' : 'none',
+                  transition: 'all 0.2s ease',
+                }}>
+                  {formatTime(timeLeft)}
+                </span>
+              </div>
+
+              {/* Progress bar */}
+              <div style={{
+                width: '100%',
+                height: '6px',
+                borderRadius: '3px',
+                background: 'rgba(255, 255, 255, 0.08)',
+                overflow: 'hidden',
+                border: '1px solid var(--border-glass)',
+              }}>
+                <div style={{
+                  width: `${timerPercentage}%`,
+                  height: '100%',
+                  borderRadius: '3px',
+                  background: isTimeCritical
+                    ? 'linear-gradient(90deg, #ef4444, #dc2626)'
+                    : isTimeWarning
+                    ? 'linear-gradient(90deg, #f59e0b, #d97706)'
+                    : 'linear-gradient(90deg, var(--color-x), #34d399)',
+                  transition: 'width 1s linear, background 0.3s ease',
+                  boxShadow: isTimeCritical ? '0 0 8px #ef4444' : '0 0 8px var(--color-x-glow)',
+                }} />
+              </div>
             </div>
           )}
 

@@ -656,6 +656,11 @@ body::before {
   100% { transform: scale(1); opacity: 1; }
 }
 
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.65; transform: scale(1.04); }
+}
+
 /* Extra Responsive Tuning */
 @media (max-width: 360px) {
   .gameboard-container {

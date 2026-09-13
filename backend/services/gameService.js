@@ -54,6 +54,8 @@ export const startMatch = async (roomCode) => {
     winningLine: null,
     matchWinner: null,
     roundHistory: [],
+    turnStartedAt: Date.now(),
+    turnTimeLimit: 120, // Mandatory 2 minutes (120 seconds) per turn
   };
 
   // Persist to PostgreSQL
@@ -133,6 +135,7 @@ export const makeMove = async (roomCode, playerId, cellIndex) => {
   } else {
     // Switch turn
     match.currentTurn = match.currentTurn === 'X' ? 'O' : 'X';
+    match.turnStartedAt = Date.now();
   }
 
   // 3. If round ended, record round history & check match completion
@@ -223,6 +226,7 @@ export const nextRound = async (roomCode) => {
   // Alternate starting symbol each round
   match.startingPlayer = match.startingPlayer === 'X' ? 'O' : 'X';
   match.currentTurn = match.startingPlayer;
+  match.turnStartedAt = Date.now();
 
   try {
     if (isDbConnected()) {
@@ -237,6 +241,46 @@ export const nextRound = async (roomCode) => {
 
   return {
     success: true,
+    room: sanitizeRoom(room)
+  };
+};
+
+/**
+ * Handle Turn Timeout (Mandatory 2-Minute limit per turn in multiplayer)
+ */
+export const handleTimeout = async (roomCode, playerId) => {
+  const room = await getRoom(roomCode);
+  if (!room || !room.match) {
+    return { success: false, error: 'No active game found.' };
+  }
+
+  const timedOutPlayer = room.players.find(p => p.id === playerId);
+  if (!timedOutPlayer) {
+    return { success: false, error: 'Player not in room.' };
+  }
+
+  const opponent = room.players.find(p => p.id !== playerId);
+  const match = room.match;
+
+  match.status = 'match_ended';
+  match.matchWinner = opponent ? opponent.symbol : (timedOutPlayer.symbol === 'X' ? 'O' : 'X');
+  match.timeout = true;
+  match.timedOutPlayerId = playerId;
+  room.status = 'finished';
+
+  try {
+    if (isDbConnected()) {
+      await query(`UPDATE matches SET status = 'timeout', updated_at = $1 WHERE id = $2`, [new Date(), match.id]);
+      await query(`UPDATE rooms SET status = 'finished' WHERE id = $1`, [room.id]);
+    }
+  } catch (err) {
+    console.error(`[gameService] DB error on timeout:`, err.message);
+  }
+
+  return {
+    success: true,
+    timedOutPlayer,
+    opponent,
     room: sanitizeRoom(room)
   };
 };
