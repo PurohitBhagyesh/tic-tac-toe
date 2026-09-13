@@ -280,13 +280,25 @@ npm run dev
   - `DATABASE_URL`: `postgresql://...` (your Supabase connection URI)
   - `CLIENT_URL`: `https://your-app.netlify.app` (your Netlify frontend domain)
 
-### 3. Frontend: Netlify
-- Create a new site on [Netlify](https://netlify.com) from your Git repository.
-- **Base directory**: `frontend`
-- **Build command**: `npm run build`
-- **Publish directory**: `dist`
-- Add Environment Variable:
-  - `VITE_API_URL`: `https://your-backend.onrender.com` (your deployed Render URL)
+### 3. Frontend Deployment (Vercel / Netlify / GitHub Pages)
+
+#### Option A: Vercel (Recommended - Unlimited Free Builds)
+1. Import repository at [vercel.com](https://vercel.com/new).
+2. Framework Preset: **Vite**.
+3. Root Directory: `./` (configured automatically with `vercel.json`).
+4. Environment Variable:
+   - `VITE_API_URL`: `https://tic-tac-toe-xcsr.onrender.com`
+5. Click **Deploy**!
+
+#### Option B: Netlify
+1. Create a site on [Netlify](https://netlify.com) from Git or drag & drop `frontend/dist` to [app.netlify.com/drop](https://app.netlify.com/drop).
+2. Base directory: `frontend` | Build command: `npm run build` | Publish: `dist`.
+3. Environment Variable: `VITE_API_URL` = `https://tic-tac-toe-xcsr.onrender.com`.
+
+#### Option C: GitHub Pages
+- Go to your repo **Settings** → **Pages** → Build and deployment: Select **GitHub Actions**.
+- The included `.github/workflows/deploy.yml` will automatically build and publish your game to `https://purohitbhagyesh.github.io/tic-tac-toe/`!
+
 
 ---
 
