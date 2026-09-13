@@ -16,20 +16,29 @@ function App() {
   }, []);
 
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/singleplayer" element={<SinglePlayer />} />
-        <Route path="/multiplayer" element={<Multiplayer />} />
-        <Route path="/create-room" element={<CreateRoom />} />
-        <Route path="/join" element={<JoinRoom />} />
-        <Route path="/join/:roomCode" element={<JoinRoom />} />
-        <Route path="/lobby/:roomCode" element={<Lobby />} />
-        <Route path="/game/:roomCode" element={<Game />} />
-        <Route path="/result/:roomCode" element={<Result />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </BrowserRouter>
+    <>
+      {/* Ambient Liquid Gradient Mesh Spheres for live glass refraction */}
+      <div className="liquid-bg-layer" aria-hidden="true">
+        <div className="liquid-orb liquid-orb-1" />
+        <div className="liquid-orb liquid-orb-2" />
+        <div className="liquid-orb liquid-orb-3" />
+      </div>
+
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/singleplayer" element={<SinglePlayer />} />
+          <Route path="/multiplayer" element={<Multiplayer />} />
+          <Route path="/create-room" element={<CreateRoom />} />
+          <Route path="/join" element={<JoinRoom />} />
+          <Route path="/join/:roomCode" element={<JoinRoom />} />
+          <Route path="/lobby/:roomCode" element={<Lobby />} />
+          <Route path="/game/:roomCode" element={<Game />} />
+          <Route path="/result/:roomCode" element={<Result />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </>
   );
 }
 

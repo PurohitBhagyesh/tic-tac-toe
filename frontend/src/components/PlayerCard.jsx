@@ -32,21 +32,22 @@ const PlayerCard = ({
 
         {isUser && (
           <span style={{
-            padding: '1px 8px',
-            borderRadius: '10px',
+            padding: '2px 9px',
+            borderRadius: 'var(--radius-pill)',
             fontSize: '0.68rem',
             fontWeight: '800',
-            background: 'rgba(56, 189, 248, 0.18)',
+            background: 'rgba(10, 132, 255, 0.15)',
             color: 'var(--color-x)',
-            border: '1px solid rgba(56, 189, 248, 0.4)',
-            letterSpacing: '0.04em'
+            border: '1px solid rgba(10, 132, 255, 0.35)',
+            letterSpacing: '0.04em',
+            boxShadow: 'var(--glass-specular)'
           }}>
             YOU
           </span>
         )}
 
         {!isConnected && (
-          <span style={{ display: 'flex', alignItems: 'center', gap: '3px', color: '#ef4444', fontSize: '0.7rem' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '3px', color: 'var(--color-coral)', fontSize: '0.7rem', fontWeight: '700' }}>
             <WifiOff size={10} /> Disconnected
           </span>
         )}
@@ -65,14 +66,14 @@ const PlayerCard = ({
               display: 'inline-flex',
               alignItems: 'center',
               gap: '4px',
-              padding: '2px 9px',
-              borderRadius: '12px',
+              padding: '2px 10px',
+              borderRadius: 'var(--radius-pill)',
               fontSize: '0.72rem',
               fontWeight: '800',
-              background: 'rgba(34, 197, 94, 0.15)',
-              color: '#4ade80',
-              border: '1px solid rgba(34, 197, 94, 0.35)',
-              boxShadow: '0 0 10px rgba(34, 197, 94, 0.2)'
+              background: 'rgba(48, 209, 88, 0.16)',
+              color: 'var(--color-mint)',
+              border: '1px solid rgba(48, 209, 88, 0.35)',
+              boxShadow: '0 0 12px rgba(48, 209, 88, 0.25)'
             }}>
               <CheckCircle2 size={12} /> READY
             </span>
@@ -81,13 +82,13 @@ const PlayerCard = ({
               display: 'inline-flex',
               alignItems: 'center',
               gap: '4px',
-              padding: '2px 9px',
-              borderRadius: '12px',
+              padding: '2px 10px',
+              borderRadius: 'var(--radius-pill)',
               fontSize: '0.72rem',
               fontWeight: '800',
-              background: 'rgba(245, 158, 11, 0.12)',
-              color: '#fbbf24',
-              border: '1px solid rgba(245, 158, 11, 0.3)'
+              background: 'rgba(255, 149, 0, 0.14)',
+              color: 'var(--color-amber)',
+              border: '1px solid rgba(255, 149, 0, 0.35)'
             }}>
               <Clock size={12} /> WAITING
             </span>

@@ -8,7 +8,8 @@ const KEYS = {
 
 export const getStoredPlayerName = () => {
   try {
-    return localStorage.getItem(KEYS.PLAYER_NAME) || '';
+    const val = localStorage.getItem(KEYS.PLAYER_NAME);
+    return val ? val.trim() : '';
   } catch (e) {
     return '';
   }
@@ -16,7 +17,12 @@ export const getStoredPlayerName = () => {
 
 export const setStoredPlayerName = (name) => {
   try {
-    if (name) localStorage.setItem(KEYS.PLAYER_NAME, name.trim());
+    if (typeof name === 'string') {
+      const trimmed = name.trim();
+      if (trimmed) {
+        localStorage.setItem(KEYS.PLAYER_NAME, trimmed);
+      }
+    }
   } catch (e) {
     // Ignore storage errors
   }
@@ -24,7 +30,11 @@ export const setStoredPlayerName = (name) => {
 
 export const getStoredDifficulty = () => {
   try {
-    return localStorage.getItem(KEYS.DIFFICULTY) || 'medium';
+    const val = localStorage.getItem(KEYS.DIFFICULTY);
+    if (val && ['easy', 'medium', 'hard'].includes(val.toLowerCase())) {
+      return val.toLowerCase();
+    }
+    return 'medium';
   } catch (e) {
     return 'medium';
   }
@@ -32,7 +42,9 @@ export const getStoredDifficulty = () => {
 
 export const setStoredDifficulty = (diff) => {
   try {
-    if (diff) localStorage.setItem(KEYS.DIFFICULTY, diff);
+    if (diff && ['easy', 'medium', 'hard'].includes(diff.toLowerCase())) {
+      localStorage.setItem(KEYS.DIFFICULTY, diff.toLowerCase());
+    }
   } catch (e) {}
 };
 
@@ -54,7 +66,7 @@ export const getStoredSinglePlayerTimer = () => {
   try {
     const val = localStorage.getItem(KEYS.SINGLE_PLAYER_TIMER);
     const parsed = parseInt(val, 10);
-    if (!isNaN(parsed) && [30, 60, 120].includes(parsed)) {
+    if (!isNaN(parsed) && [0, 30, 60, 120].includes(parsed)) {
       return parsed;
     }
     return 60; // default 1 minute
@@ -65,6 +77,8 @@ export const getStoredSinglePlayerTimer = () => {
 
 export const setStoredSinglePlayerTimer = (seconds) => {
   try {
-    if (seconds) localStorage.setItem(KEYS.SINGLE_PLAYER_TIMER, String(seconds));
+    if (typeof seconds === 'number') {
+      localStorage.setItem(KEYS.SINGLE_PLAYER_TIMER, String(seconds));
+    }
   } catch (e) {}
 };

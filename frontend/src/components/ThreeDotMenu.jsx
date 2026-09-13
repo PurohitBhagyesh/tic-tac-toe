@@ -5,6 +5,52 @@ import Button from './Button';
 import { toggleMute, getMuteState, playSound } from '../utils/sound';
 import { getStoredTheme, toggleTheme, applyTheme } from '../utils/theme';
 
+// Modern iOS/Material style sliding toggle switch component (Single ON/OFF button, no inside text)
+const ToggleSwitch = ({ checked, onChange, activeColor = 'var(--color-x)', label = '' }) => {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={(e) => {
+        e.stopPropagation();
+        onChange();
+      }}
+      style={{
+        width: '46px',
+        height: '26px',
+        borderRadius: '13px',
+        background: checked ? activeColor : 'rgba(100, 116, 139, 0.28)',
+        border: `1.5px solid ${checked ? activeColor : 'var(--border-glass)'}`,
+        position: 'relative',
+        cursor: 'pointer',
+        transition: 'all 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
+        boxShadow: checked ? `0 0 12px ${activeColor}` : 'none',
+        padding: 0,
+        display: 'inline-flex',
+        alignItems: 'center',
+        flexShrink: 0,
+        outline: 'none',
+      }}
+      title={label}
+      aria-label={label}
+    >
+      <span
+        style={{
+          width: '20px',
+          height: '20px',
+          borderRadius: '50%',
+          background: '#ffffff',
+          boxShadow: '0 2px 5px rgba(0, 0, 0, 0.35)',
+          position: 'absolute',
+          left: checked ? '22px' : '2px',
+          transition: 'left 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
+        }}
+      />
+    </button>
+  );
+};
+
 const ThreeDotMenu = ({
   onGiveUp = null,
   giveUpLabel = 'Give Up Match',
@@ -84,189 +130,228 @@ const ThreeDotMenu = ({
               </button>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-              {/* 1. Mute Audio Toggle */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {/* iOS Grouped Settings Card */}
               <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '0.85rem 1rem',
                 background: 'var(--bg-input)',
-                border: '1.5px solid var(--border-glass)',
-                borderRadius: 'var(--radius-md)'
+                borderRadius: 'var(--radius-lg)',
+                border: '1px solid var(--border-glass)',
+                boxShadow: 'var(--glass-specular)',
+                overflow: 'hidden',
+                backdropFilter: 'blur(24px)',
+                WebkitBackdropFilter: 'blur(24px)',
               }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                  {isMuted ? <VolumeX size={20} color="var(--text-muted)" /> : <Volume2 size={20} color="var(--color-x)" />}
-                  <span style={{ fontWeight: '700', fontSize: '0.95rem', color: 'var(--text-primary)' }}>
-                    Game Audio FX
-                  </span>
-                </div>
-
-                <button
-                  type="button"
+                {/* 1. Sound Effects - Clean Single Toggle Button */}
+                <div
                   onClick={handleToggleSound}
                   style={{
-                    padding: '0.4rem 0.9rem',
-                    borderRadius: '20px',
-                    border: '1.5px solid var(--border-glass)',
-                    background: isMuted ? 'rgba(255,255,255,0.06)' : 'rgba(56, 189, 248, 0.2)',
-                    color: isMuted ? 'var(--text-muted)' : 'var(--color-x)',
-                    fontWeight: '800',
-                    fontSize: '0.82rem',
-                    cursor: 'pointer'
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '0.95rem 1.15rem',
+                    borderBottom: '1px solid var(--border-glass)',
+                    cursor: 'pointer',
+                    userSelect: 'none',
+                    transition: 'background 0.2s ease',
                   }}
                 >
-                  {isMuted ? 'MUTED' : 'ENABLED'}
-                </button>
-              </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <div style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '8px',
+                      background: isMuted ? 'rgba(148, 163, 184, 0.15)' : 'rgba(10, 132, 255, 0.18)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}>
+                      {isMuted ? <VolumeX size={18} color="var(--text-muted)" /> : <Volume2 size={18} color="var(--color-x)" />}
+                    </div>
+                    <span style={{ fontWeight: '700', fontSize: '0.95rem', color: 'var(--text-primary)' }}>
+                      Sound Effects
+                    </span>
+                  </div>
 
-              {/* 2. Dark / Light Mode Toggle */}
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '0.85rem 1rem',
-                background: 'var(--bg-input)',
-                border: '1.5px solid var(--border-glass)',
-                borderRadius: 'var(--radius-md)'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                  {theme === 'dark' ? <Moon size={20} color="#38bdf8" /> : <Sun size={20} color="#f59e0b" />}
-                  <span style={{ fontWeight: '700', fontSize: '0.95rem', color: 'var(--text-primary)' }}>
-                    Theme Appearance
-                  </span>
+                  <ToggleSwitch
+                    checked={!isMuted}
+                    onChange={handleToggleSound}
+                    activeColor="var(--color-x)"
+                    label="Toggle Sound Effects"
+                  />
                 </div>
 
-                <button
-                  type="button"
+                {/* 2. Dark Mode - Clean Single Toggle Button */}
+                <div
                   onClick={handleToggleTheme}
                   style={{
-                    padding: '0.4rem 0.9rem',
-                    borderRadius: '20px',
-                    border: '1.5px solid var(--border-glass)',
-                    background: 'rgba(56, 189, 248, 0.15)',
-                    color: 'var(--color-x)',
-                    fontWeight: '800',
-                    fontSize: '0.82rem',
-                    cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '0.35rem'
+                    justifyContent: 'space-between',
+                    padding: '0.95rem 1.15rem',
+                    borderBottom: '1px solid var(--border-glass)',
+                    cursor: 'pointer',
+                    userSelect: 'none',
+                    transition: 'background 0.2s ease',
                   }}
                 >
-                  {theme === 'dark' ? 'DARK MODE' : 'LIGHT MODE'}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <div style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '8px',
+                      background: theme === 'dark' ? 'rgba(94, 92, 230, 0.18)' : 'rgba(255, 149, 0, 0.18)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}>
+                      {theme === 'dark' ? <Moon size={18} color="#5e5ce6" /> : <Sun size={18} color="#ff9500" />}
+                    </div>
+                    <span style={{ fontWeight: '700', fontSize: '0.95rem', color: 'var(--text-primary)' }}>
+                      Dark Mode
+                    </span>
+                  </div>
+
+                  <ToggleSwitch
+                    checked={theme === 'dark'}
+                    onChange={handleToggleTheme}
+                    activeColor="var(--color-x)"
+                    label="Toggle Dark Mode"
+                  />
+                </div>
+
+                {/* 3. Game Rules Button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    playSound('pop');
+                    setIsOpen(false);
+                    setShowRules(true);
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    width: '100%',
+                    padding: '0.95rem 1.15rem',
+                    background: 'transparent',
+                    border: 'none',
+                    color: 'var(--text-primary)',
+                    fontWeight: '700',
+                    fontSize: '0.95rem',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <div style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '8px',
+                      background: 'rgba(100, 210, 255, 0.15)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}>
+                      <BookOpen size={18} color="var(--color-accent)" />
+                    </div>
+                    <span>Game Rules</span>
+                  </div>
+                  <span style={{ fontSize: '1rem', color: 'var(--text-muted)' }}>›</span>
                 </button>
               </div>
 
-              {/* 3. Game Rules Button */}
-              <button
-                type="button"
-                onClick={() => {
-                  playSound('pop');
-                  setIsOpen(false);
-                  setShowRules(true);
-                }}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '0.85rem 1rem',
-                  background: 'var(--bg-input)',
-                  border: '1.5px solid var(--border-glass)',
-                  borderRadius: 'var(--radius-md)',
-                  color: 'var(--text-primary)',
-                  fontWeight: '700',
-                  fontSize: '0.95rem',
-                  cursor: 'pointer'
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                  <BookOpen size={20} color="var(--color-x)" />
-                  <span>Game Rules</span>
-                </div>
-                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>➔</span>
-              </button>
+              {/* Action Buttons */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+                {/* 4. Restart Option */}
+                {onRestart && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsOpen(false);
+                      onRestart();
+                    }}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.6rem',
+                      padding: '0.85rem 1rem',
+                      background: 'rgba(10, 132, 255, 0.12)',
+                      border: '1px solid rgba(10, 132, 255, 0.35)',
+                      borderRadius: 'var(--radius-md)',
+                      color: 'var(--color-x)',
+                      fontWeight: '800',
+                      fontSize: '0.95rem',
+                      cursor: 'pointer',
+                      boxShadow: 'var(--glass-specular)',
+                      transition: 'all 0.2s ease',
+                    }}
+                  >
+                    <RotateCcw size={18} color="var(--color-x)" />
+                    <span>{restartLabel}</span>
+                  </button>
+                )}
 
-              {/* 4. Restart Option */}
-              {onRestart && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsOpen(false);
-                    onRestart();
-                  }}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.6rem',
-                    padding: '0.85rem 1rem',
-                    background: 'rgba(56, 189, 248, 0.1)',
-                    border: '1.5px solid var(--border-glass)',
-                    borderRadius: 'var(--radius-md)',
-                    color: 'var(--color-x)',
-                    fontWeight: '800',
-                    fontSize: '0.95rem',
-                    cursor: 'pointer'
-                  }}
-                >
-                  <RotateCcw size={20} color="var(--color-x)" />
-                  <span>{restartLabel}</span>
-                </button>
-              )}
+                {/* 5. Give Up Option */}
+                {onGiveUp && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsOpen(false);
+                      onGiveUp();
+                    }}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.6rem',
+                      padding: '0.85rem 1rem',
+                      background: 'rgba(255, 69, 58, 0.12)',
+                      border: '1px solid rgba(255, 69, 58, 0.35)',
+                      borderRadius: 'var(--radius-md)',
+                      color: 'var(--color-coral)',
+                      fontWeight: '800',
+                      fontSize: '0.95rem',
+                      cursor: 'pointer',
+                      boxShadow: 'var(--glass-specular)',
+                      transition: 'all 0.2s ease',
+                    }}
+                  >
+                    <Flag size={18} color="var(--color-coral)" />
+                    <span>{giveUpLabel}</span>
+                  </button>
+                )}
 
-              {/* 5. Give Up Option */}
-              {onGiveUp && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsOpen(false);
-                    onGiveUp();
-                  }}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.6rem',
-                    padding: '0.85rem 1rem',
-                    background: 'rgba(244, 63, 94, 0.1)',
-                    border: '1.5px solid rgba(244, 63, 94, 0.3)',
-                    borderRadius: 'var(--radius-md)',
-                    color: '#f43f5e',
-                    fontWeight: '800',
-                    fontSize: '0.95rem',
-                    cursor: 'pointer'
-                  }}
-                >
-                  <Flag size={20} color="#f43f5e" />
-                  <span>{giveUpLabel}</span>
-                </button>
-              )}
-
-              {/* 6. Exit / Leave Room Button */}
-              {onLeaveRoom && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsOpen(false);
-                    onLeaveRoom();
-                  }}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.6rem',
-                    padding: '0.85rem 1rem',
-                    background: 'rgba(244, 63, 94, 0.1)',
-                    border: '1.5px solid rgba(244, 63, 94, 0.3)',
-                    borderRadius: 'var(--radius-md)',
-                    color: '#f43f5e',
-                    fontWeight: '800',
-                    fontSize: '0.95rem',
-                    cursor: 'pointer'
-                  }}
-                >
-                  <LogOut size={20} />
-                  <span>{leaveLabel}</span>
-                </button>
-              )}
+                {/* 6. Exit / Leave Room Button */}
+                {onLeaveRoom && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsOpen(false);
+                      onLeaveRoom();
+                    }}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.6rem',
+                      padding: '0.85rem 1rem',
+                      background: 'rgba(255, 69, 58, 0.12)',
+                      border: '1px solid rgba(255, 69, 58, 0.35)',
+                      borderRadius: 'var(--radius-md)',
+                      color: 'var(--color-coral)',
+                      fontWeight: '800',
+                      fontSize: '0.95rem',
+                      cursor: 'pointer',
+                      boxShadow: 'var(--glass-specular)',
+                      transition: 'all 0.2s ease',
+                    }}
+                  >
+                    <LogOut size={18} />
+                    <span>{leaveLabel}</span>
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>,

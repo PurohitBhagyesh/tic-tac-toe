@@ -69,6 +69,16 @@ const Game = () => {
     return () => clearInterval(interval);
   }, [room?.match?.currentTurn, room?.match?.turnStartedAt, room?.match?.status, currentUser, roomCode]);
 
+  // Synchronize state when navigating into Game (e.g. fresh match or rematch)
+  useEffect(() => {
+    if (location.state?.room) {
+      setRoom(location.state.room);
+    }
+    if (location.state?.player) {
+      setCurrentUser(location.state.player);
+    }
+  }, [location.state]);
+
   // Load and join room socket
   useEffect(() => {
     connectSocket();
@@ -87,7 +97,8 @@ const Game = () => {
           // If match already ended, navigate to result
           if (data.room.status === 'finished' || data.room.match?.status === 'match_ended') {
             navigate(`/result/${roomCode}`, {
-              state: { room: data.room, player: user }
+              state: { room: data.room, player: user },
+              replace: true
             });
           }
         }
@@ -101,6 +112,14 @@ const Game = () => {
 
   // Socket.IO real-time game events
   useEffect(() => {
+    // 0. Game start / Rematch start
+    const cleanupGameStart = socketService.onGameStart(({ room: updatedRoom }) => {
+      setRoom(updatedRoom);
+      setIsTransitioningRound(false);
+      setRoundNotification(null);
+      setAutoRoundCountdown(null);
+    });
+
     // 1. Move updates
     const cleanupUpdate = socketService.onGameUpdate(({ room: updatedRoom, lastMove }) => {
       setRoom(updatedRoom);
@@ -164,6 +183,7 @@ const Game = () => {
     });
 
     return () => {
+      cleanupGameStart();
       cleanupUpdate();
       cleanupRoundEnd();
       cleanupMatchEnd();

@@ -10,7 +10,6 @@ const GameBoard = ({
 }) => {
   const handleClick = (index) => {
     if (disabled || board[index] !== null || overlay) return;
-    playSound('click');
     onCellClick(index);
   };
 

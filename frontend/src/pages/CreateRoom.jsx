@@ -12,7 +12,7 @@ import { playSound } from '../utils/sound';
 
 const CreateRoom = () => {
   const navigate = useNavigate();
-  const [playerName, setPlayerName] = useState(getStoredPlayerName() || 'Bhagyesh');
+  const [playerName, setPlayerName] = useState(getStoredPlayerName() || 'Player 1');
   const [roomData, setRoomData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -138,10 +138,13 @@ const CreateRoom = () => {
                   id="host-name"
                   type="text"
                   className="text-input"
-                  placeholder="e.g. Bhagyesh"
+                  placeholder="e.g. Player 1"
                   value={playerName}
                   maxLength={25}
-                  onChange={(e) => setPlayerName(e.target.value)}
+                  onChange={(e) => {
+                    setPlayerName(e.target.value);
+                    setStoredPlayerName(e.target.value);
+                  }}
                   autoFocus
                 />
               </div>

@@ -162,6 +162,11 @@ const Result = () => {
                       ⏳ Opponent ran out of time (2m limit)
                     </p>
                   )}
+                  {match?.forfeited && (
+                    <p style={{ color: 'var(--color-x)', fontSize: '0.95rem', fontWeight: '700', marginTop: '0.4rem' }}>
+                      🏳️ Opponent gave up the match!
+                    </p>
+                  )}
                 </>
               )}
 
@@ -187,6 +192,11 @@ const Result = () => {
                   {match?.timeout && (
                     <p style={{ color: '#ef4444', fontSize: '0.95rem', fontWeight: '700', marginTop: '0.4rem' }}>
                       ⏳ You ran out of time (2m limit)
+                    </p>
+                  )}
+                  {match?.forfeited && (
+                    <p style={{ color: '#ef4444', fontSize: '0.95rem', fontWeight: '700', marginTop: '0.4rem' }}>
+                      🏳️ You gave up the match
                     </p>
                   )}
                 </>

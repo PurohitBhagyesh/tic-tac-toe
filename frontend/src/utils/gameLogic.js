@@ -101,41 +101,64 @@ export const getMediumMove = (board, aiSymbol = 'O', humanSymbol = 'X') => {
 };
 
 /**
- * 3. Hard AI (Minimax Algorithm) - Unbeatable optimal play
+ * 3. Hard AI (Minimax Algorithm with Alpha-Beta Pruning) - Unbeatable optimal play
  */
 export const getHardMove = (board, aiSymbol = 'O', humanSymbol = 'X') => {
   const availableMoves = getAvailableMoves(board);
   if (availableMoves.length === 0) return null;
 
-  // Minimax recursive evaluator
-  const minimax = (currentBoard, depth, isMaximizing) => {
+  // 1. Immediate Win
+  for (const move of availableMoves) {
+    const temp = [...board];
+    temp[move] = aiSymbol;
+    if (checkWinner(temp)) return move;
+  }
+
+  // 2. Immediate Block
+  for (const move of availableMoves) {
+    const temp = [...board];
+    temp[move] = humanSymbol;
+    if (checkWinner(temp)) return move;
+  }
+
+  // 3. Take Center if free on first moves
+  if (board[4] === null) {
+    return 4;
+  }
+
+  const boardClone = [...board];
+
+  const minimax = (currentBoard, depth, isMaximizing, alpha, beta) => {
     const winResult = checkWinner(currentBoard);
     if (winResult) {
       if (winResult.winner === aiSymbol) return 10 - depth;
       if (winResult.winner === humanSymbol) return depth - 10;
     }
-    if (checkDraw(currentBoard)) return 0;
-
     const moves = getAvailableMoves(currentBoard);
+    if (moves.length === 0) return 0;
 
     if (isMaximizing) {
-      let bestScore = -Infinity;
+      let maxEval = -Infinity;
       for (const move of moves) {
         currentBoard[move] = aiSymbol;
-        const score = minimax(currentBoard, depth + 1, false);
+        const evaluation = minimax(currentBoard, depth + 1, false, alpha, beta);
         currentBoard[move] = null;
-        bestScore = Math.max(score, bestScore);
+        maxEval = Math.max(maxEval, evaluation);
+        alpha = Math.max(alpha, evaluation);
+        if (beta <= alpha) break;
       }
-      return bestScore;
+      return maxEval;
     } else {
-      let bestScore = Infinity;
+      let minEval = Infinity;
       for (const move of moves) {
         currentBoard[move] = humanSymbol;
-        const score = minimax(currentBoard, depth + 1, true);
+        const evaluation = minimax(currentBoard, depth + 1, true, alpha, beta);
         currentBoard[move] = null;
-        bestScore = Math.min(score, bestScore);
+        minEval = Math.min(minEval, evaluation);
+        beta = Math.min(beta, evaluation);
+        if (beta <= alpha) break;
       }
-      return bestScore;
+      return minEval;
     }
   };
 
@@ -143,9 +166,9 @@ export const getHardMove = (board, aiSymbol = 'O', humanSymbol = 'X') => {
   let bestScore = -Infinity;
 
   for (const move of availableMoves) {
-    board[move] = aiSymbol;
-    const score = minimax(board, 0, false);
-    board[move] = null;
+    boardClone[move] = aiSymbol;
+    const score = minimax(boardClone, 0, false, -Infinity, Infinity);
+    boardClone[move] = null;
 
     if (score > bestScore) {
       bestScore = score;

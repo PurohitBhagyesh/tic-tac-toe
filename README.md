@@ -1,41 +1,59 @@
 # 🎮 Tic-Tac-Toe - Full-Stack Real-Time Web Application
 
-A modern, production-ready, full-stack Tic-Tac-Toe web application featuring **Singleplayer against AI** (Easy, Medium, and unbeatable Hard Minimax), **Real-Time Multiplayer** powered by **Socket.IO**, 6-digit room codes, **QR-code room joining and camera scanning**, 5-round competitive matches, score tracking, rematch agreements, and **PostgreSQL (Supabase)** database persistence.
+A modern, production-ready, full-stack Tic-Tac-Toe web application featuring an **iOS Liquid Glass Theme**, **Singleplayer against AI** (Easy, Medium, and unbeatable Hard Minimax), **Real-Time Multiplayer** powered by **Socket.IO**, 6-digit room codes, **QR-code room joining and camera scanning**, 5-round competitive matches, score tracking, rematch agreements, and **PostgreSQL (Supabase)** database persistence.
+
+🌐 **Live Netlify Deployment**: [https://tictactoegamearena.netlify.app/](https://tictactoegamearena.netlify.app/)
+
+---
+
+## 📸 Screenshots & UI Showcase
+
+| Home Screen | Singleplayer Arena |
+| :---: | :---: |
+| ![Home Screen](screenshots/home_screen.png) | ![Singleplayer Game](screenshots/singleplayer_game.png) |
+
+| Victory Outcome Modal | Multiplayer Lobby & Rooms |
+| :---: | :---: |
+| ![Victory Modal](screenshots/victory_outcome_modal.png) | ![Multiplayer Selection](screenshots/multiplayer_menu.png) |
 
 ---
 
 ## 🌟 Key Features
 
-1. **Singleplayer AI Modes**:
+1. **iOS Liquid Glass Aesthetic**:
+   - Apple SF Pro typography, dynamic squircle acrylic tiles, specular edge highlights, and live floating liquid ambient orbs.
+   - Clean iOS segmented controls for AI difficulty (`Easy` \| `Medium` \| `Hard`) and Turn Timer (`60s` \| `30s` \| `Off`).
+   - Grouped settings card with sliding toggle switches.
+2. **Dedicated Finish & Outcome Screen Modal**:
+   - Displays animated trophy / badges on round completion (Win 🏆, Defeat 💀, Draw 🤝, Timeout ⏳, Forfeit 🏳️).
+   - Live Scoreboard Card (`Player X` vs `AI O`, `Draws`, Win Rate).
+   - 1-Click **"PLAY AGAIN"** button to immediately restart rounds cleanly, plus **"View Board"** to review winning combinations.
+3. **Singleplayer AI Modes**:
    - **Easy**: Random empty cell selection.
    - **Medium**: Blocks wins, seizes immediate winning moves, center/corners heuristics.
    - **Hard**: Unbeatable optimal Minimax algorithm with recursive depth evaluation.
-2. **Real-Time Multiplayer with Socket.IO**:
+4. **Real-Time Multiplayer with Socket.IO**:
    - Instant move synchronization between devices with sub-100ms latency.
    - Authoritative server validation to prevent illegal moves, double moves, and turn spoofing.
-3. **Room System & 6-Digit Codes**:
+5. **Room System & 6-Digit Codes**:
    - Cryptographically random, unique 6-digit room codes (e.g. `482731`).
-4. **QR Code Sharing & Camera Scanner**:
+6. **QR Code Sharing & Camera Scanner**:
    - Host generates instant QR code containing join URL.
    - Opponents can scan with their phone camera using the integrated scanner or join directly via share link.
-5. **Lobby & Ready System**:
+7. **Lobby & Ready System**:
    - Real-time synchronization of player names, symbols (X / O), and ready states.
    - Match starts when both players are ready and host initiates.
-6. **5-Round Competitive Matches & Turn Timers**:
+8. **5-Round Competitive Matches & Turn Timers**:
    - Structured 5-round matches with live scoreboards (`Player 1: 3` vs `Player 2: 2`).
-   - Turn Timers: Customizable (30s, 1m, 2m) in Singleplayer; Mandatory 2-minute limit per turn in Multiplayer.
+   - Turn Timers: Customizable in Singleplayer; Mandatory 2-minute limit per turn in Multiplayer.
    - Alternating starting turns each round.
-7. **Rematch & Forfeit System**:
+9. **Rematch & Forfeit System**:
    - Mutual rematch agreement system (restarts match only when both players accept).
    - "Give Up" forfeit modal and timeout loss detection.
    - Three-dot game options menu with interactive Game Rules modal.
-8. **PostgreSQL / Supabase Integration**:
-   - Automatic database table creation (`rooms`, `players`, `matches`, `rounds`).
-   - Foreign keys, parameterized SQL queries, and connection pooling with `pg`.
-9. **Aesthetic Bluish & White UI**:
-   - Deep Sapphire Navy & Crisp White in Dark Mode; Ice Blue & Snow White in Light Mode.
-   - Glassmorphism, animations, confetti celebrations, and touch-friendly controls.
-   - Live Deployment: **[https://tictactoegamearena.netlify.app/](https://tictactoegamearena.netlify.app/)**
+10. **PostgreSQL / Supabase Integration**:
+    - Automatic database table creation (`rooms`, `players`, `matches`, `rounds`).
+    - Foreign keys, parameterized SQL queries, and connection pooling with `pg`.
 
 ---
 

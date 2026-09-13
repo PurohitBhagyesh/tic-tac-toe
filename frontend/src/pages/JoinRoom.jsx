@@ -175,10 +175,13 @@ const JoinRoom = () => {
                 id="player-name"
                 type="text"
                 className="text-input"
-                placeholder="e.g. Rahul"
+                placeholder="e.g. Player 2"
                 value={playerName}
                 maxLength={25}
-                onChange={(e) => setPlayerName(e.target.value)}
+                onChange={(e) => {
+                  setPlayerName(e.target.value);
+                  setStoredPlayerName(e.target.value);
+                }}
               />
             </div>
 
