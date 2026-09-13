@@ -245,9 +245,65 @@ const SinglePlayer = () => {
   const isTimeWarning = timerSetting > 0 && timeLeft <= 15 && timeLeft > 6;
   const isTimeCritical = timerSetting > 0 && timeLeft <= 6;
 
-  // In-Board Blurred Outcome Overlay (with embedded Rematch button)
+  // In-Board Blurred Outcome Overlay (with Rematch and Leave Match buttons)
   const getRoundOverlay = () => {
     if (!isRoundEnded) return null;
+
+    const renderOverlayActions = () => (
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '0.65rem',
+        marginTop: '0.45rem',
+        width: '100%',
+        flexWrap: 'wrap',
+      }}>
+        <button
+          type="button"
+          onClick={handleRematch}
+          style={{
+            padding: '0.65rem 1.25rem',
+            borderRadius: '14px',
+            border: 'none',
+            background: 'linear-gradient(180deg, #0a84ff 0%, #0066d6 100%)',
+            color: '#ffffff',
+            fontSize: '0.92rem',
+            fontWeight: '800',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.45rem',
+            cursor: 'pointer',
+            boxShadow: '0 0 20px var(--color-x-glow)',
+            transition: 'all 0.2s ease',
+          }}
+        >
+          <RotateCcw size={16} /> Rematch
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setShowLeaveModal(true)}
+          style={{
+            padding: '0.65rem 1.15rem',
+            borderRadius: '14px',
+            border: '1px solid var(--border-glass)',
+            background: 'rgba(255, 255, 255, 0.08)',
+            color: 'var(--text-primary)',
+            fontSize: '0.92rem',
+            fontWeight: '800',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.45rem',
+            cursor: 'pointer',
+            backdropFilter: 'blur(16px)',
+            transition: 'all 0.2s ease',
+          }}
+        >
+          <LogOut size={16} /> Leave Match
+        </button>
+      </div>
+    );
 
     if (winnerInfo?.timeout) {
       return (
@@ -279,28 +335,7 @@ const SinglePlayer = () => {
               AI Bot was awarded the win
             </span>
           </div>
-          <button
-            type="button"
-            onClick={handleRematch}
-            style={{
-              marginTop: '0.4rem',
-              padding: '0.65rem 1.4rem',
-              borderRadius: '14px',
-              border: 'none',
-              background: 'linear-gradient(180deg, #0a84ff 0%, #0066d6 100%)',
-              color: '#ffffff',
-              fontSize: '0.92rem',
-              fontWeight: '800',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.45rem',
-              cursor: 'pointer',
-              boxShadow: '0 0 20px var(--color-x-glow)',
-              transition: 'all 0.2s ease',
-            }}
-          >
-            <RotateCcw size={16} /> Rematch
-          </button>
+          {renderOverlayActions()}
         </>
       );
     }
@@ -334,28 +369,7 @@ const SinglePlayer = () => {
               Well played! Board is tied.
             </span>
           </div>
-          <button
-            type="button"
-            onClick={handleRematch}
-            style={{
-              marginTop: '0.4rem',
-              padding: '0.65rem 1.4rem',
-              borderRadius: '14px',
-              border: 'none',
-              background: 'linear-gradient(180deg, #0a84ff 0%, #0066d6 100%)',
-              color: '#ffffff',
-              fontSize: '0.92rem',
-              fontWeight: '800',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.45rem',
-              cursor: 'pointer',
-              boxShadow: '0 0 20px var(--color-x-glow)',
-              transition: 'all 0.2s ease',
-            }}
-          >
-            <RotateCcw size={16} /> Rematch
-          </button>
+          {renderOverlayActions()}
         </>
       );
     }
@@ -391,28 +405,7 @@ const SinglePlayer = () => {
               You defeated the {difficulty.toUpperCase()} AI!
             </span>
           </div>
-          <button
-            type="button"
-            onClick={handleRematch}
-            style={{
-              marginTop: '0.4rem',
-              padding: '0.65rem 1.4rem',
-              borderRadius: '14px',
-              border: 'none',
-              background: 'linear-gradient(180deg, #0a84ff 0%, #0066d6 100%)',
-              color: '#ffffff',
-              fontSize: '0.92rem',
-              fontWeight: '800',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.45rem',
-              cursor: 'pointer',
-              boxShadow: '0 0 20px var(--color-x-glow)',
-              transition: 'all 0.2s ease',
-            }}
-          >
-            <RotateCcw size={16} /> Rematch
-          </button>
+          {renderOverlayActions()}
         </>
       );
     }
@@ -447,28 +440,7 @@ const SinglePlayer = () => {
             AI Bot won this round
           </span>
         </div>
-        <button
-          type="button"
-          onClick={handleRematch}
-          style={{
-            marginTop: '0.4rem',
-            padding: '0.65rem 1.4rem',
-            borderRadius: '14px',
-            border: 'none',
-            background: 'linear-gradient(180deg, #0a84ff 0%, #0066d6 100%)',
-            color: '#ffffff',
-            fontSize: '0.92rem',
-            fontWeight: '800',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '0.45rem',
-            cursor: 'pointer',
-            boxShadow: '0 0 20px var(--color-x-glow)',
-            transition: 'all 0.2s ease',
-          }}
-        >
-          <RotateCcw size={16} /> Rematch
-        </button>
+        {renderOverlayActions()}
       </>
     );
   };
@@ -543,14 +515,7 @@ const SinglePlayer = () => {
                     onChange={(e) => setPlayerName(e.target.value)}
                     placeholder="Enter your name"
                     maxLength={15}
-                    className="input-field"
-                    style={{
-                      width: '100%',
-                      padding: '0.85rem 1rem',
-                      borderRadius: '14px',
-                      fontSize: '1rem',
-                      fontWeight: '700',
-                    }}
+                    className="text-input"
                     required
                   />
                 </div>

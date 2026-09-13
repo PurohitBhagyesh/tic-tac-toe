@@ -461,29 +461,34 @@ html, body {
   color: var(--text-secondary);
 }
 
-.text-input {
+.text-input,
+.input-field {
   width: 100%;
-  background: var(--bg-input);
+  background: var(--bg-input) !important;
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid var(--border-glass);
+  border: 1.5px solid var(--border-glass);
   border-radius: var(--radius-md);
   padding: 0.95rem 1.15rem;
   font-family: var(--font-main);
   font-size: clamp(0.95rem, 2.5vw, 1.05rem);
-  color: var(--text-primary);
+  font-weight: 700;
+  color: var(--text-primary) !important;
   outline: none;
   box-shadow: var(--glass-specular), inset 0 2px 4px rgba(0, 0, 0, 0.15);
   transition: all 0.22s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
-.text-input:focus {
+.text-input:focus,
+.input-field:focus {
   border-color: var(--color-x);
   box-shadow: var(--glass-specular), 0 0 20px var(--color-x-glow);
+  background: var(--bg-card-hover) !important;
   transform: translateY(-1px);
 }
 
-.text-input::placeholder {
+.text-input::placeholder,
+.input-field::placeholder {
   color: var(--text-muted);
 }
 
