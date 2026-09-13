@@ -16,15 +16,14 @@ const server = http.createServer(app);
 const PORT = process.env.PORT || 5000;
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
 
-// Allowed origins for CORS (supports local development and Netlify production domains)
+// Allowed origins for CORS (supports local development and Vercel/GitHub Pages domains)
 const allowedOrigins = [
   CLIENT_URL,
-  'https://tictactoegamearena.netlify.app',
   'http://localhost:5173',
   'http://localhost:3000',
   'http://127.0.0.1:5173',
-  /\.netlify\.app$/, // Allow Netlify preview and deploy URLs
   /\.vercel\.app$/,  // Allow all Vercel preview and production URLs
+  /github\.io$/,     // Allow GitHub Pages
 ];
 
 const corsOptions = {

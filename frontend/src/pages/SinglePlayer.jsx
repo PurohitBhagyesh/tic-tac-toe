@@ -8,8 +8,6 @@ import {
   Home as HomeIcon,
   Timer,
   Settings,
-  Trophy,
-  Check,
   X as CloseIcon,
   LogOut,
   User,
@@ -17,6 +15,7 @@ import {
   Shield,
   Flame,
   Gamepad2,
+  Check,
 } from 'lucide-react';
 import Header from '../components/Header';
 import GameBoard from '../components/GameBoard';
@@ -40,23 +39,17 @@ import {
 } from '../utils/storage';
 import { playSound } from '../utils/sound';
 
-const MAX_ROUNDS = 5;
-
 const SinglePlayer = () => {
   const navigate = useNavigate();
 
-  // 1. Initial Setup State (Name, Timer, Difficulty FIRST)
+  // 1. Setup Preferences (Name, Timer, Difficulty FIRST)
   const [isGameStarted, setIsGameStarted] = useState(false);
   const [playerName, setPlayerName] = useState(() => getStoredPlayerName() || 'Player 1');
   const [difficulty, setDifficulty] = useState(() => getStoredDifficulty() || 'medium');
   const [timerSetting, setTimerSetting] = useState(() => getStoredSinglePlayerTimer() || 60);
 
-  // 2. Active Match State (Best of 5 rounds like Multiplayer)
-  const [currentRound, setCurrentRound] = useState(1);
-  const [scores, setScores] = useState({ X: 0, O: 0, draws: 0 });
-  const [roundHistory, setRoundHistory] = useState([]);
-
-  // 3. Board & Turn State
+  // 2. Game & Scoreboard State (Single Round per game with Rematch)
+  const [scores, setScores] = useState({ human: 0, ai: 0, draws: 0 });
   const [board, setBoard] = useState(() => resetBoard());
   const [currentTurn, setCurrentTurn] = useState('X'); // X = Human, O = AI
   const [isAiThinking, setIsAiThinking] = useState(false);
@@ -64,15 +57,11 @@ const SinglePlayer = () => {
   const [isDraw, setIsDraw] = useState(false);
   const [timeLeft, setTimeLeft] = useState(() => timerSetting);
 
-  // 4. Transitions & Modals (Only Leave Game & Settings, NO Give Up)
-  const [isTransitioningRound, setIsTransitioningRound] = useState(false);
-  const [autoRoundCountdown, setAutoRoundCountdown] = useState(null);
-  const [showMatchEndModal, setShowMatchEndModal] = useState(false);
+  // 3. Modals (Leave Game & Settings, NO Give Up)
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
 
   const aiTimeoutRef = useRef(null);
-  const autoRoundTimerRef = useRef(null);
   const difficultyRef = useRef(difficulty);
   const timerSettingRef = useRef(timerSetting);
 
@@ -84,16 +73,14 @@ const SinglePlayer = () => {
     timerSettingRef.current = timerSetting;
   }, [timerSetting]);
 
-  // Clean up all timers on unmount
+  // Clean up any pending AI timeout on unmount
   useEffect(() => {
     return () => {
       if (aiTimeoutRef.current) clearTimeout(aiTimeoutRef.current);
-      if (autoRoundTimerRef.current) clearInterval(autoRoundTimerRef.current);
     };
   }, []);
 
   const isRoundEnded = Boolean(winnerInfo || isDraw);
-  const isMatchEnded = currentRound >= MAX_ROUNDS && isRoundEnded;
 
   // Turn Timer countdown for Human Player (X)
   useEffect(() => {
@@ -123,15 +110,11 @@ const SinglePlayer = () => {
   // Handle Timeout Loss
   const handleTimeoutLoss = () => {
     playSound('timeout');
-    const outcome = { winner: 'O', timeout: true };
-    setWinnerInfo(outcome);
-    const newScores = { ...scores, O: scores.O + 1 };
-    setScores(newScores);
-    setRoundHistory((prev) => [...prev, { round: currentRound, winner: 'O', timeout: true }]);
-    handlePostRound(outcome, newScores);
+    setWinnerInfo({ winner: 'O', timeout: true });
+    setScores((prev) => ({ ...prev, ai: prev.ai + 1 }));
   };
 
-  // Start Game from Setup Form
+  // Start Game from Setup Screen
   const handleStartGame = (e) => {
     if (e) e.preventDefault();
     const finalName = playerName.trim() || 'Player 1';
@@ -140,27 +123,20 @@ const SinglePlayer = () => {
     setStoredDifficulty(difficulty);
     setStoredSinglePlayerTimer(timerSetting);
 
-    // Initialize clean 5-round match state
     if (aiTimeoutRef.current) clearTimeout(aiTimeoutRef.current);
-    if (autoRoundTimerRef.current) clearInterval(autoRoundTimerRef.current);
 
     setBoard(resetBoard());
     setWinnerInfo(null);
     setIsDraw(false);
-    setCurrentRound(1);
-    setScores({ X: 0, O: 0, draws: 0 });
-    setRoundHistory([]);
     setCurrentTurn('X');
     setTimeLeft(timerSetting);
     setIsAiThinking(false);
-    setShowMatchEndModal(false);
-    setAutoRoundCountdown(null);
 
     playSound('pop');
     setIsGameStarted(true);
   };
 
-  // Human Move
+  // Human Player Move
   const handleCellClick = (index) => {
     if (!isGameStarted || isRoundEnded || currentTurn !== 'X' || isAiThinking || board[index] !== null) {
       return;
@@ -175,23 +151,17 @@ const SinglePlayer = () => {
     const humanWin = checkWinner(boardAfterHuman);
     if (humanWin) {
       setWinnerInfo(humanWin);
-      const newScores = { ...scores, X: scores.X + 1 };
-      setScores(newScores);
-      setRoundHistory((prev) => [...prev, { round: currentRound, winner: 'X' }]);
+      setScores((prev) => ({ ...prev, human: prev.human + 1 }));
       playSound('win');
       confetti({ particleCount: 120, spread: 80, origin: { y: 0.55 } });
-      handlePostRound(humanWin, newScores);
       return;
     }
 
     // 2. Check Draw
     if (checkDraw(boardAfterHuman)) {
       setIsDraw(true);
-      const newScores = { ...scores, draws: scores.draws + 1 };
-      setScores(newScores);
-      setRoundHistory((prev) => [...prev, { round: currentRound, winner: null, draw: true }]);
+      setScores((prev) => ({ ...prev, draws: prev.draws + 1 }));
       playSound('draw');
-      handlePostRound(null, newScores);
       return;
     }
 
@@ -220,18 +190,12 @@ const SinglePlayer = () => {
         const aiWin = checkWinner(boardAfterAI);
         if (aiWin) {
           setWinnerInfo(aiWin);
-          const newScores = { ...scores, O: scores.O + 1 };
-          setScores(newScores);
-          setRoundHistory((prev) => [...prev, { round: currentRound, winner: 'O' }]);
+          setScores((prev) => ({ ...prev, ai: prev.ai + 1 }));
           playSound('draw');
-          handlePostRound(aiWin, newScores);
         } else if (checkDraw(boardAfterAI)) {
           setIsDraw(true);
-          const newScores = { ...scores, draws: scores.draws + 1 };
-          setScores(newScores);
-          setRoundHistory((prev) => [...prev, { round: currentRound, winner: null, draw: true }]);
+          setScores((prev) => ({ ...prev, draws: prev.draws + 1 }));
           playSound('draw');
-          handlePostRound(null, newScores);
         } else {
           setCurrentTurn('X');
           setTimeLeft(curTimer);
@@ -242,80 +206,32 @@ const SinglePlayer = () => {
     }, 450);
   };
 
-  // Post Round Transition
-  const handlePostRound = (outcome, newScores) => {
-    if (autoRoundTimerRef.current) clearInterval(autoRoundTimerRef.current);
-
-    if (currentRound < MAX_ROUNDS) {
-      // 3s countdown ticker into next round
-      setAutoRoundCountdown(3);
-      let count = 3;
-      autoRoundTimerRef.current = setInterval(() => {
-        count -= 1;
-        if (count <= 0) {
-          clearInterval(autoRoundTimerRef.current);
-          setAutoRoundCountdown(null);
-          handleNextRound();
-        } else {
-          setAutoRoundCountdown(count);
-        }
-      }, 1000);
-    } else {
-      // 5 rounds complete: open Match Result Modal
-      setTimeout(() => {
-        setShowMatchEndModal(true);
-      }, 1200);
-    }
-  };
-
-  // Advance to Next Round (Round 1 -> 2 -> 3 -> 4 -> 5)
-  const handleNextRound = () => {
-    if (autoRoundTimerRef.current) clearInterval(autoRoundTimerRef.current);
-    if (aiTimeoutRef.current) clearTimeout(aiTimeoutRef.current);
-
-    setIsTransitioningRound(true);
-    playSound('pop');
-
-    setTimeout(() => {
-      setBoard(resetBoard());
-      setWinnerInfo(null);
-      setIsDraw(false);
-      setAutoRoundCountdown(null);
-      setCurrentRound((prev) => prev + 1);
-      setCurrentTurn('X');
-      setTimeLeft(timerSetting);
-      setIsAiThinking(false);
-      setIsTransitioningRound(false);
-    }, 200);
-  };
-
-  // Restart 5-Round Match
-  const handleRestartMatch = () => {
-    if (autoRoundTimerRef.current) clearInterval(autoRoundTimerRef.current);
+  // Instant 1-Click Rematch (Cleans board for next round, keeps running scores)
+  const handleRematch = () => {
     if (aiTimeoutRef.current) clearTimeout(aiTimeoutRef.current);
 
     playSound('pop');
     setBoard(resetBoard());
     setWinnerInfo(null);
     setIsDraw(false);
-    setCurrentRound(1);
-    setScores({ X: 0, O: 0, draws: 0 });
-    setRoundHistory([]);
     setCurrentTurn('X');
     setTimeLeft(timerSetting);
     setIsAiThinking(false);
-    setShowMatchEndModal(false);
-    setAutoRoundCountdown(null);
+  };
+
+  // Reset Scores and Board
+  const handleResetScores = () => {
+    playSound('pop');
+    setScores({ human: 0, ai: 0, draws: 0 });
+    handleRematch();
   };
 
   // Return to Setup Screen
   const handleReturnToSetup = () => {
-    if (autoRoundTimerRef.current) clearInterval(autoRoundTimerRef.current);
     if (aiTimeoutRef.current) clearTimeout(aiTimeoutRef.current);
-
     playSound('pop');
     setIsGameStarted(false);
-    setShowMatchEndModal(false);
+    setShowSettingsModal(false);
   };
 
   // Format seconds to mm:ss
@@ -357,31 +273,12 @@ const SinglePlayer = () => {
               color: 'var(--color-coral)',
               letterSpacing: '0.02em',
             }}>
-              Round {currentRound} Timeout!
+              Time Ran Out!
             </span>
             <span style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-secondary)' }}>
-              Time expired for your turn
+              AI Bot was awarded the win
             </span>
           </div>
-
-          {currentRound < MAX_ROUNDS && (
-            <div style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.45rem',
-              marginTop: '0.4rem',
-              padding: '0.35rem 0.85rem',
-              borderRadius: '16px',
-              background: 'rgba(255, 69, 58, 0.14)',
-              border: '1px solid rgba(255, 69, 58, 0.35)',
-              fontSize: '0.84rem',
-              fontWeight: '800',
-              color: 'var(--color-coral)',
-            }}>
-              <Timer size={14} />
-              <span>Next round in {autoRoundCountdown !== null ? autoRoundCountdown : 3}s...</span>
-            </div>
-          )}
         </>
       );
     }
@@ -409,31 +306,12 @@ const SinglePlayer = () => {
               color: 'var(--text-primary)',
               letterSpacing: '0.02em',
             }}>
-              Round {currentRound} Draw!
+              Match Draw!
             </span>
             <span style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-secondary)' }}>
-              Scores tied this round
+              Well played! Board is tied.
             </span>
           </div>
-
-          {currentRound < MAX_ROUNDS && (
-            <div style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.45rem',
-              marginTop: '0.4rem',
-              padding: '0.35rem 0.85rem',
-              borderRadius: '16px',
-              background: 'rgba(56, 189, 248, 0.14)',
-              border: '1px solid rgba(56, 189, 248, 0.35)',
-              fontSize: '0.84rem',
-              fontWeight: '800',
-              color: 'var(--color-x)',
-            }}>
-              <Timer size={14} />
-              <span>Next round in {autoRoundCountdown !== null ? autoRoundCountdown : 3}s...</span>
-            </div>
-          )}
         </>
       );
     }
@@ -463,31 +341,12 @@ const SinglePlayer = () => {
               textShadow: '0 0 16px var(--color-x-glow)',
               letterSpacing: '0.02em',
             }}>
-              Round {currentRound} Victory!
+              Victory!
             </span>
             <span style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-secondary)' }}>
-              You won this round!
+              You defeated the {difficulty.toUpperCase()} AI!
             </span>
           </div>
-
-          {currentRound < MAX_ROUNDS && (
-            <div style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.45rem',
-              marginTop: '0.4rem',
-              padding: '0.35rem 0.85rem',
-              borderRadius: '16px',
-              background: 'rgba(56, 189, 248, 0.14)',
-              border: '1px solid rgba(56, 189, 248, 0.35)',
-              fontSize: '0.84rem',
-              fontWeight: '800',
-              color: 'var(--color-x)',
-            }}>
-              <Timer size={14} />
-              <span>Next round in {autoRoundCountdown !== null ? autoRoundCountdown : 3}s...</span>
-            </div>
-          )}
         </>
       );
     }
@@ -516,39 +375,15 @@ const SinglePlayer = () => {
             textShadow: '0 0 16px var(--color-o-glow)',
             letterSpacing: '0.02em',
           }}>
-            Round {currentRound} Defeat!
+            Defeat!
           </span>
           <span style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-secondary)' }}>
             AI Bot won this round
           </span>
         </div>
-
-        {currentRound < MAX_ROUNDS && (
-          <div style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '0.45rem',
-            marginTop: '0.4rem',
-            padding: '0.35rem 0.85rem',
-            borderRadius: '16px',
-            background: 'rgba(129, 140, 248, 0.14)',
-            border: '1px solid rgba(129, 140, 248, 0.35)',
-            fontSize: '0.84rem',
-            fontWeight: '800',
-            color: 'var(--color-o)',
-          }}>
-            <Timer size={14} />
-            <span>Next round in {autoRoundCountdown !== null ? autoRoundCountdown : 3}s...</span>
-          </div>
-        )}
       </>
     );
   };
-
-  // Match Final Outcome calculation
-  const isHumanMatchWinner = scores.X > scores.O;
-  const isAiMatchWinner = scores.O > scores.X;
-  const isMatchTied = scores.X === scores.O;
 
   return (
     <div className="app-container">
@@ -563,8 +398,8 @@ const SinglePlayer = () => {
         showMenu
         onLeaveRoom={() => setShowLeaveModal(true)}
         leaveLabel="Leave Game"
-        onRestart={isGameStarted ? handleRestartMatch : null}
-        restartLabel="Restart Match"
+        onRestart={isGameStarted ? handleRematch : null}
+        restartLabel="Rematch"
         isMultiplayer={false}
       />
 
@@ -595,7 +430,7 @@ const SinglePlayer = () => {
                   Singleplayer Match
                 </h2>
                 <p style={{ fontSize: '0.88rem', fontWeight: '600', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
-                  Set your name, timer, and AI difficulty to begin
+                  Configure your settings and challenge the AI Bot
                 </p>
               </div>
 
@@ -739,7 +574,7 @@ const SinglePlayer = () => {
                   </div>
                 </div>
 
-                {/* Submit / Start Game Button */}
+                {/* Start Game Button */}
                 <div style={{ marginTop: '0.5rem' }}>
                   <Button
                     type="submit"
@@ -762,22 +597,22 @@ const SinglePlayer = () => {
           </div>
         ) : (
           /* ============================================================
-             2. ACTIVE GAME ARENA: 5-Round Match (Singleplayer)
+             2. ACTIVE GAME ARENA: Single Round with Instant Rematch
              ============================================================ */
           <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            {/* 5-Round Match Scoreboard (Matches Multiplayer) */}
+            {/* Scoreboard Bar */}
             <div className="players-match-bar">
               <PlayerCard
                 name={playerName}
                 symbol="X"
-                score={scores.X}
+                score={scores.human}
                 isActiveTurn={currentTurn === 'X' && !isRoundEnded}
                 isUser
               />
 
               <div className="match-vs-divider">
-                <span className="round-pill">
-                  Round {currentRound} of {MAX_ROUNDS}
+                <span className="round-pill" style={{ textTransform: 'capitalize' }}>
+                  {difficulty} AI
                 </span>
                 <span style={{ fontSize: '0.8rem', fontWeight: '900', color: '#64748b', marginTop: '2px' }}>
                   VS
@@ -785,9 +620,9 @@ const SinglePlayer = () => {
               </div>
 
               <PlayerCard
-                name={`AI (${difficulty.toUpperCase()})`}
+                name="AI Bot"
                 symbol="O"
-                score={scores.O}
+                score={scores.ai}
                 isActiveTurn={currentTurn === 'O' && !isRoundEnded}
               />
             </div>
@@ -795,12 +630,14 @@ const SinglePlayer = () => {
             {/* Turn & Match Commentary */}
             <PlayerStatus
               message={
-                isMatchEnded
-                  ? '5-Round Match Complete!'
-                  : isRoundEnded
-                  ? `Round ${currentRound} Complete`
+                isRoundEnded
+                  ? (winnerInfo?.winner === 'X'
+                      ? '🎉 You Won!'
+                      : winnerInfo?.winner === 'O'
+                      ? (winnerInfo?.timeout ? '⏳ Time Out!' : '💀 AI Bot Won!')
+                      : '🤝 Match Draw!')
                   : currentTurn === 'X'
-                  ? (isTimeCritical ? '⚠️ Hurry up! Timer Running Out!' : 'Your Turn (X)')
+                  ? (isTimeCritical ? '⚠️ Hurry up! Time Running Out!' : 'Your Turn (X)')
                   : `AI Bot is thinking (O)...`
               }
               isThinking={currentTurn === 'O' && !isRoundEnded}
@@ -879,7 +716,7 @@ const SinglePlayer = () => {
               </div>
             )}
 
-            {/* 3x3 Game Board with In-Board Blurred Overlay */}
+            {/* 3x3 Game Board with In-Board Blurred Outcome Overlay */}
             <GameBoard
               board={board}
               onCellClick={handleCellClick}
@@ -888,28 +725,48 @@ const SinglePlayer = () => {
               overlay={getRoundOverlay()}
             />
 
-            {/* Controls Bar - Next Round Button after round ends */}
-            {isRoundEnded && currentRound < MAX_ROUNDS && (
-              <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.75rem', width: '100%', maxWidth: '380px' }}>
+            {/* Action Buttons Row */}
+            {isRoundEnded ? (
+              /* Round Finished: Prominent REMATCH and Setup Controls */
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem', marginTop: '0.85rem', width: '100%', maxWidth: '380px' }}>
                 <Button
                   variant="primary"
                   size="lg"
                   className="btn-block"
-                  onClick={handleNextRound}
-                  disabled={isTransitioningRound}
-                  icon={Play}
+                  onClick={handleRematch}
+                  icon={RotateCcw}
                   style={{
+                    fontSize: '1.1rem',
+                    fontWeight: '900',
                     boxShadow: '0 0 25px var(--color-x-glow)',
-                    fontSize: '1.15rem'
                   }}
                 >
-                  {isTransitioningRound ? 'Loading Next Round...' : `NEXT ROUND (${currentRound + 1}/${MAX_ROUNDS})`}
+                  REMATCH
                 </Button>
-              </div>
-            )}
 
-            {/* Active Round Controls Bar (ONLY Leave Game & Settings, NO Give Up) */}
-            {!isRoundEnded && (
+                <div style={{ display: 'flex', gap: '0.65rem' }}>
+                  <Button
+                    variant="secondary"
+                    size="md"
+                    className="btn-block"
+                    onClick={() => setShowSettingsModal(true)}
+                    icon={Settings}
+                  >
+                    Settings
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="md"
+                    className="btn-block"
+                    onClick={() => setShowLeaveModal(true)}
+                    icon={LogOut}
+                  >
+                    Leave Game
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              /* Round in Progress: Leave Game & Settings (NO Give Up) */
               <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.75rem', width: '100%', maxWidth: '380px' }}>
                 <Button
                   variant="secondary"
@@ -939,7 +796,7 @@ const SinglePlayer = () => {
       <ConfirmModal
         isOpen={showLeaveModal}
         title="Leave Game?"
-        message="Are you sure you want to exit this singleplayer match? Your current game progress will be reset."
+        message="Are you sure you want to exit to the main menu? Your current game session and scores will be reset."
         confirmText="Leave Game"
         confirmVariant="danger"
         onConfirm={() => {
@@ -950,7 +807,7 @@ const SinglePlayer = () => {
         onCancel={() => setShowLeaveModal(false)}
       />
 
-      {/* Settings Modal (AI Difficulty & Turn Timer) */}
+      {/* Settings Modal (AI Difficulty, Timer, and Score Reset) */}
       {showSettingsModal && createPortal(
         <div className="modal-overlay" onClick={() => setShowSettingsModal(false)}>
           <div className="modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '420px' }}>
@@ -1006,7 +863,7 @@ const SinglePlayer = () => {
             </div>
 
             {/* Turn Timer Selector */}
-            <div style={{ marginBottom: '1.5rem' }}>
+            <div style={{ marginBottom: '1.25rem' }}>
               <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
                 TURN TIMER
               </label>
@@ -1047,159 +904,50 @@ const SinglePlayer = () => {
               </div>
             </div>
 
-            <Button
-              variant="primary"
-              size="md"
-              className="btn-block"
-              onClick={() => setShowSettingsModal(false)}
-            >
-              Apply & Close
-            </Button>
-          </div>
-        </div>,
-        document.body
-      )}
-
-      {/* 5-Round Match End Result Modal */}
-      {showMatchEndModal && createPortal(
-        <div className="modal-overlay">
-          <div
-            className="modal-card"
-            style={{
-              maxWidth: '440px',
-              textAlign: 'center',
-              padding: '2rem 1.5rem',
-              animation: 'scaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-            }}
-          >
-            {/* Trophy / Result Icon */}
-            <div style={{
-              width: '84px',
-              height: '84px',
-              margin: '0 auto 1.25rem',
-              borderRadius: '50%',
-              background: isHumanMatchWinner
-                ? 'linear-gradient(135deg, rgba(250, 204, 21, 0.25), rgba(245, 158, 11, 0.35))'
-                : isMatchTied
-                ? 'rgba(255, 255, 255, 0.12)'
-                : 'linear-gradient(135deg, rgba(129, 140, 248, 0.25), rgba(99, 102, 241, 0.35))',
-              border: `2px solid ${isHumanMatchWinner ? '#fbbf24' : isMatchTied ? 'var(--border-glass-bright)' : 'var(--color-o)'}`,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '2.75rem',
-              boxShadow: isHumanMatchWinner ? '0 0 35px rgba(251, 191, 36, 0.5)' : 'none',
-            }}>
-              {isHumanMatchWinner ? '🏆' : isMatchTied ? '🤝' : '💀'}
-            </div>
-
-            <h2 style={{
-              fontSize: '1.75rem',
-              fontWeight: '900',
-              letterSpacing: '-0.02em',
-              color: isHumanMatchWinner ? 'var(--color-x)' : isMatchTied ? 'var(--text-primary)' : 'var(--color-o)',
-              marginBottom: '0.4rem',
-            }}>
-              {isHumanMatchWinner ? 'MATCH VICTORY!' : isMatchTied ? 'MATCH TIED!' : 'MATCH DEFEAT!'}
-            </h2>
-
-            <p style={{
-              fontSize: '0.95rem',
-              fontWeight: '700',
-              color: 'var(--text-secondary)',
-              marginBottom: '1.5rem',
-            }}>
-              {isHumanMatchWinner
-                ? `Incredible! You defeated the ${difficulty.toUpperCase()} AI in a 5-round battle!`
-                : isMatchTied
-                ? 'All 5 rounds completed with equal scores!'
-                : `The ${difficulty.toUpperCase()} AI Bot claimed match victory.`}
-            </p>
-
-            {/* Scorecard Pill */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-around',
-              padding: '1rem',
-              borderRadius: '16px',
-              background: 'rgba(255, 255, 255, 0.04)',
-              border: '1px solid var(--border-glass)',
-              marginBottom: '1.75rem',
-            }}>
-              <div>
-                <span style={{ display: 'block', fontSize: '0.78rem', fontWeight: '800', color: 'var(--color-x)' }}>
-                  {playerName} (X)
-                </span>
-                <span style={{ fontSize: '1.8rem', fontWeight: '900', color: 'var(--text-primary)' }}>
-                  {scores.X}
-                </span>
-              </div>
-
-              <div style={{ fontSize: '1.2rem', fontWeight: '900', color: 'var(--text-muted)' }}>
-                -
-              </div>
-
-              <div>
-                <span style={{ display: 'block', fontSize: '0.78rem', fontWeight: '800', color: 'var(--color-o)' }}>
-                  AI ({difficulty}) (O)
-                </span>
-                <span style={{ fontSize: '1.8rem', fontWeight: '900', color: 'var(--text-primary)' }}>
-                  {scores.O}
-                </span>
-              </div>
-
-              {scores.draws > 0 && (
-                <>
-                  <div style={{ fontSize: '1.2rem', fontWeight: '900', color: 'var(--text-muted)' }}>
-                    -
-                  </div>
-                  <div>
-                    <span style={{ display: 'block', fontSize: '0.78rem', fontWeight: '800', color: 'var(--text-secondary)' }}>
-                      Draws
-                    </span>
-                    <span style={{ fontSize: '1.8rem', fontWeight: '900', color: 'var(--text-secondary)' }}>
-                      {scores.draws}
-                    </span>
-                  </div>
-                </>
-              )}
-            </div>
-
-            {/* Action Buttons */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              <Button
-                variant="primary"
-                size="lg"
-                className="btn-block"
-                onClick={handleRestartMatch}
-                icon={RotateCcw}
-                style={{ fontSize: '1.05rem', boxShadow: '0 0 20px var(--color-x-glow)' }}
+            {/* Reset Scores Option */}
+            <div style={{ marginBottom: '1.25rem' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  handleResetScores();
+                  setShowSettingsModal(false);
+                }}
+                style={{
+                  width: '100%',
+                  padding: '0.65rem',
+                  borderRadius: '12px',
+                  background: 'rgba(255, 255, 255, 0.06)',
+                  border: '1px solid var(--border-glass)',
+                  color: 'var(--text-secondary)',
+                  fontWeight: '700',
+                  fontSize: '0.85rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.4rem',
+                }}
               >
-                Play Again (5-Round Rematch)
-              </Button>
+                <RotateCcw size={15} /> Reset Scoreboard ({scores.human} - {scores.ai})
+              </button>
+            </div>
 
+            <div style={{ display: 'flex', gap: '0.6rem' }}>
               <Button
                 variant="secondary"
                 size="md"
                 className="btn-block"
                 onClick={handleReturnToSetup}
-                icon={Settings}
               >
-                Change Match Settings
+                Change Setup
               </Button>
-
               <Button
-                variant="secondary"
+                variant="primary"
                 size="md"
                 className="btn-block"
-                onClick={() => {
-                  playSound('click');
-                  navigate('/');
-                }}
-                icon={HomeIcon}
+                onClick={() => setShowSettingsModal(false)}
               >
-                Back to Home
+                Apply & Close
               </Button>
             </div>
           </div>

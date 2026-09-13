@@ -8,14 +8,12 @@ A modern, production-ready, full-stack Tic-Tac-Toe web application featuring an 
 
 Experience the full interactive game live in your browser:
 
-[![Live Demo](https://img.shields.io/badge/🎮%20Try%20Live%20Demo-Netlify-00C7B7?style=for-the-badge&logo=netlify&logoColor=white)](https://tictactoegamearena.netlify.app/)
 [![GitHub Repo](https://img.shields.io/badge/GitHub-Repository-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/PurohitBhagyesh/tic-tac-toe)
+[![Vercel Deployment](https://img.shields.io/badge/Vercel-Deployed-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://github.com/PurohitBhagyesh/tic-tac-toe)
 
-🌐 **Live Demo URL**: **[https://tictactoegamearena.netlify.app/](https://tictactoegamearena.netlify.app/)**
-
-- 🤖 **Singleplayer Mode**: Play against Easy, Medium, or unbeatable Hard Minimax AI with customizable turn timers.
+- 🤖 **Singleplayer Mode**: Play against Easy, Medium, or unbeatable Hard Minimax AI with customizable turn timers and instant 1-click Rematch.
 - 👥 **Multiplayer Arena**: Create or join 6-digit rooms with live camera QR scanning and sub-100ms real-time moves.
-- 🏆 **5-Round Matches & Outcome Screens**: Complete with celebration trophies, live score tracking, and 1-click Rematch agreements.
+- 🏆 **Dynamic Outcome Screens**: Complete with celebration trophies, live score tracking, and instant Rematch agreements.
 
 ---
 
@@ -278,9 +276,9 @@ npm run dev
 - Add Environment Variables:
   - `PORT`: `5000` (or leave default Render port)
   - `DATABASE_URL`: `postgresql://...` (your Supabase connection URI)
-  - `CLIENT_URL`: `https://your-app.netlify.app` (your Netlify frontend domain)
+  - `CLIENT_URL`: `https://your-app.vercel.app` (your Vercel frontend domain)
 
-### 3. Frontend Deployment (Vercel / Netlify / GitHub Pages)
+### 3. Frontend Deployment (Vercel & GitHub Pages)
 
 #### Option A: Vercel (Recommended - Unlimited Free Builds)
 1. Import repository at [vercel.com](https://vercel.com/new).
@@ -290,15 +288,9 @@ npm run dev
    - `VITE_API_URL`: `https://tic-tac-toe-xcsr.onrender.com`
 5. Click **Deploy**!
 
-#### Option B: Netlify
-1. Create a site on [Netlify](https://netlify.com) from Git or drag & drop `frontend/dist` to [app.netlify.com/drop](https://app.netlify.com/drop).
-2. Base directory: `frontend` | Build command: `npm run build` | Publish: `dist`.
-3. Environment Variable: `VITE_API_URL` = `https://tic-tac-toe-xcsr.onrender.com`.
-
-#### Option C: GitHub Pages
+#### Option B: GitHub Pages
 - Go to your repo **Settings** → **Pages** → Build and deployment: Select **GitHub Actions**.
 - The included `.github/workflows/deploy.yml` will automatically build and publish your game to `https://purohitbhagyesh.github.io/tic-tac-toe/`!
-
 
 ---
 
@@ -307,7 +299,6 @@ npm run dev
 **Bhagyesh Purohit**
 - **GitHub**: [@PurohitBhagyesh](https://github.com/PurohitBhagyesh)
 - **Repository**: [https://github.com/PurohitBhagyesh/tic-tac-toe](https://github.com/PurohitBhagyesh/tic-tac-toe)
-- **Live Demo**: [https://tictactoegamearena.netlify.app/](https://tictactoegamearena.netlify.app/)
 
 ---
 
