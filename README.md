@@ -2,7 +2,20 @@
 
 A modern, production-ready, full-stack Tic-Tac-Toe web application featuring an **iOS Liquid Glass Theme**, **Singleplayer against AI** (Easy, Medium, and unbeatable Hard Minimax), **Real-Time Multiplayer** powered by **Socket.IO**, 6-digit room codes, **QR-code room joining and camera scanning**, 5-round competitive matches, score tracking, rematch agreements, and **PostgreSQL (Supabase)** database persistence.
 
-🌐 **Live Netlify Deployment**: [https://tictactoegamearena.netlify.app/](https://tictactoegamearena.netlify.app/)
+---
+
+## 🚀 Try Demo
+
+Experience the full interactive game live in your browser:
+
+[![Live Demo](https://img.shields.io/badge/🎮%20Try%20Live%20Demo-Netlify-00C7B7?style=for-the-badge&logo=netlify&logoColor=white)](https://tictactoegamearena.netlify.app/)
+[![GitHub Repo](https://img.shields.io/badge/GitHub-Repository-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/PurohitBhagyesh/tic-tac-toe)
+
+🌐 **Live Demo URL**: **[https://tictactoegamearena.netlify.app/](https://tictactoegamearena.netlify.app/)**
+
+- 🤖 **Singleplayer Mode**: Play against Easy, Medium, or unbeatable Hard Minimax AI with customizable turn timers.
+- 👥 **Multiplayer Arena**: Create or join 6-digit rooms with live camera QR scanning and sub-100ms real-time moves.
+- 🏆 **5-Round Matches & Outcome Screens**: Complete with celebration trophies, live score tracking, and 1-click Rematch agreements.
 
 ---
 
