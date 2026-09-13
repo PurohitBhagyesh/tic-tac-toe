@@ -2,12 +2,24 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import confetti from 'canvas-confetti';
-import { Bot, RotateCcw, Home as HomeIcon, Check, Timer, Clock, Edit2, X, Trophy } from 'lucide-react';
+import {
+  RotateCcw,
+  Home as HomeIcon,
+  Timer,
+  Play,
+  Flag,
+  Settings,
+  Trophy,
+  Check,
+  X as CloseIcon,
+  Bot
+} from 'lucide-react';
 import Header from '../components/Header';
 import GameBoard from '../components/GameBoard';
 import PlayerCard from '../components/PlayerCard';
 import PlayerStatus from '../components/PlayerStatus';
 import Button from '../components/Button';
+import ConfirmModal from '../components/ConfirmModal';
 import {
   checkWinner,
   checkDraw,
@@ -16,7 +28,6 @@ import {
 } from '../utils/gameLogic';
 import {
   getStoredPlayerName,
-  setStoredPlayerName,
   getStoredDifficulty,
   setStoredDifficulty,
   getStoredSinglePlayerTimer,
@@ -24,33 +35,41 @@ import {
 } from '../utils/storage';
 import { playSound } from '../utils/sound';
 
+const MAX_ROUNDS = 5;
+
 const SinglePlayer = () => {
   const navigate = useNavigate();
 
-  // Stored preferences
-  const [playerName, setPlayerName] = useState(() => getStoredPlayerName() || 'Player 1');
+  // Settings & Preferences
+  const [playerName] = useState(() => getStoredPlayerName() || 'Player 1');
   const [difficulty, setDifficulty] = useState(() => getStoredDifficulty() || 'medium');
   const [timerSetting, setTimerSetting] = useState(() => getStoredSinglePlayerTimer() || 60);
 
-  // Edit Name Modal
-  const [isNameModalOpen, setIsNameModalOpen] = useState(false);
-  const [tempName, setTempName] = useState(playerName);
+  // Match & Round State (Best of 5 rounds like Multiplayer)
+  const [currentRound, setCurrentRound] = useState(1);
+  const [scores, setScores] = useState({ X: 0, O: 0, draws: 0 });
+  const [roundHistory, setRoundHistory] = useState([]);
 
-  // Finish / Game Over Modal
-  const [showFinishModal, setShowFinishModal] = useState(false);
-
-  // Game state
+  // Board State
   const [board, setBoard] = useState(() => resetBoard());
-  const [currentTurn, setCurrentTurn] = useState('X'); // Human = X, AI = O
+  const [currentTurn, setCurrentTurn] = useState('X'); // X = Human, O = AI
   const [isAiThinking, setIsAiThinking] = useState(false);
   const [winnerInfo, setWinnerInfo] = useState(null);
   const [isDraw, setIsDraw] = useState(false);
-  const [scores, setScores] = useState({ human: 0, ai: 0, draws: 0 });
   const [timeLeft, setTimeLeft] = useState(() => timerSetting);
 
-  const aiTimeoutRef = useRef(null);
+  // Round Transition & Match End
+  const [isTransitioningRound, setIsTransitioningRound] = useState(false);
+  const [autoRoundCountdown, setAutoRoundCountdown] = useState(null);
+  const [showMatchEndModal, setShowMatchEndModal] = useState(false);
 
-  // Synchronize difficulty and timer refs
+  // Confirmation & Settings Modals
+  const [showGiveUpModal, setShowGiveUpModal] = useState(false);
+  const [showLeaveModal, setShowLeaveModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+
+  const aiTimeoutRef = useRef(null);
+  const autoRoundTimerRef = useRef(null);
   const difficultyRef = useRef(difficulty);
   const timerSettingRef = useRef(timerSetting);
 
@@ -62,16 +81,20 @@ const SinglePlayer = () => {
     timerSettingRef.current = timerSetting;
   }, [timerSetting]);
 
-  // Clean up any pending AI timeout on unmount
+  // Clean up all timers on unmount
   useEffect(() => {
     return () => {
       if (aiTimeoutRef.current) clearTimeout(aiTimeoutRef.current);
+      if (autoRoundTimerRef.current) clearInterval(autoRoundTimerRef.current);
     };
   }, []);
 
+  const isRoundEnded = Boolean(winnerInfo || isDraw);
+  const isMatchEnded = currentRound >= MAX_ROUNDS && isRoundEnded;
+
   // Turn Timer countdown for Human Player (X)
   useEffect(() => {
-    if (currentTurn !== 'X' || winnerInfo || isDraw || isAiThinking || timerSetting === 0) {
+    if (currentTurn !== 'X' || isRoundEnded || isAiThinking || timerSetting === 0) {
       return;
     }
 
@@ -79,10 +102,7 @@ const SinglePlayer = () => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
           clearInterval(interval);
-          playSound('timeout');
-          setWinnerInfo({ winner: 'O', timeout: true });
-          setScores((s) => ({ ...s, ai: s.ai + 1 }));
-          setShowFinishModal(true);
+          handleTimeoutLoss();
           return 0;
         }
 
@@ -95,18 +115,22 @@ const SinglePlayer = () => {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [currentTurn, winnerInfo, isDraw, isAiThinking, timerSetting]);
+  }, [currentTurn, isRoundEnded, isAiThinking, timerSetting]);
 
-  // Format seconds to mm:ss
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  // Handle Timeout Loss
+  const handleTimeoutLoss = () => {
+    playSound('timeout');
+    const outcome = { winner: 'O', timeout: true };
+    setWinnerInfo(outcome);
+    const newScores = { ...scores, O: scores.O + 1 };
+    setScores(newScores);
+    setRoundHistory((prev) => [...prev, { round: currentRound, winner: 'O', timeout: true }]);
+    handlePostRound(outcome, newScores);
   };
 
   // Human Player Move
   const handleCellClick = (index) => {
-    if (winnerInfo || isDraw || currentTurn !== 'X' || isAiThinking || board[index] !== null) {
+    if (isRoundEnded || currentTurn !== 'X' || isAiThinking || board[index] !== null) {
       return;
     }
 
@@ -119,27 +143,30 @@ const SinglePlayer = () => {
     const humanWin = checkWinner(boardAfterHuman);
     if (humanWin) {
       setWinnerInfo(humanWin);
-      setScores((prev) => ({ ...prev, human: prev.human + 1 }));
-      setShowFinishModal(true);
+      const newScores = { ...scores, X: scores.X + 1 };
+      setScores(newScores);
+      setRoundHistory((prev) => [...prev, { round: currentRound, winner: 'X' }]);
       playSound('win');
       confetti({ particleCount: 120, spread: 80, origin: { y: 0.55 } });
+      handlePostRound(humanWin, newScores);
       return;
     }
 
     // 2. Check Draw
     if (checkDraw(boardAfterHuman)) {
       setIsDraw(true);
-      setScores((prev) => ({ ...prev, draws: prev.draws + 1 }));
-      setShowFinishModal(true);
+      const newScores = { ...scores, draws: scores.draws + 1 };
+      setScores(newScores);
+      setRoundHistory((prev) => [...prev, { round: currentRound, winner: null, draw: true }]);
       playSound('draw');
+      handlePostRound(null, newScores);
       return;
     }
 
-    // 3. Switch to AI turn
+    // 3. Switch to AI Turn
     setCurrentTurn('O');
     setIsAiThinking(true);
 
-    // Schedule AI move with natural delay
     if (aiTimeoutRef.current) clearTimeout(aiTimeoutRef.current);
 
     aiTimeoutRef.current = setTimeout(() => {
@@ -147,9 +174,10 @@ const SinglePlayer = () => {
       const curTimer = timerSettingRef.current;
 
       const aiMove = getAIMove(boardAfterHuman, curDiff, 'O', 'X');
-      const finalAiIndex = (aiMove !== null && aiMove !== undefined && boardAfterHuman[aiMove] === null)
-        ? aiMove
-        : boardAfterHuman.findIndex((c) => c === null);
+      const finalAiIndex =
+        aiMove !== null && aiMove !== undefined && boardAfterHuman[aiMove] === null
+          ? aiMove
+          : boardAfterHuman.findIndex((c) => c === null);
 
       if (finalAiIndex !== -1 && finalAiIndex !== undefined) {
         const boardAfterAI = [...boardAfterHuman];
@@ -160,14 +188,18 @@ const SinglePlayer = () => {
         const aiWin = checkWinner(boardAfterAI);
         if (aiWin) {
           setWinnerInfo(aiWin);
-          setScores((prev) => ({ ...prev, ai: prev.ai + 1 }));
-          setShowFinishModal(true);
+          const newScores = { ...scores, O: scores.O + 1 };
+          setScores(newScores);
+          setRoundHistory((prev) => [...prev, { round: currentRound, winner: 'O' }]);
           playSound('draw');
+          handlePostRound(aiWin, newScores);
         } else if (checkDraw(boardAfterAI)) {
           setIsDraw(true);
-          setScores((prev) => ({ ...prev, draws: prev.draws + 1 }));
-          setShowFinishModal(true);
+          const newScores = { ...scores, draws: scores.draws + 1 };
+          setScores(newScores);
+          setRoundHistory((prev) => [...prev, { round: currentRound, winner: null, draw: true }]);
           playSound('draw');
+          handlePostRound(null, newScores);
         } else {
           setCurrentTurn('X');
           setTimeLeft(curTimer);
@@ -175,310 +207,440 @@ const SinglePlayer = () => {
       }
 
       setIsAiThinking(false);
-    }, 420);
+    }, 450);
   };
 
-  // Rematch / New Round / Play Again
-  const handleRematch = () => {
+  // Post Round Handler: Automatic countdown to next round or trigger match end
+  const handlePostRound = (outcome, newScores) => {
+    if (autoRoundTimerRef.current) clearInterval(autoRoundTimerRef.current);
+
+    if (currentRound < MAX_ROUNDS) {
+      // Automatic 3s transition into next round like multiplayer
+      setAutoRoundCountdown(3);
+      let count = 3;
+      autoRoundTimerRef.current = setInterval(() => {
+        count -= 1;
+        if (count <= 0) {
+          clearInterval(autoRoundTimerRef.current);
+          setAutoRoundCountdown(null);
+          handleNextRound();
+        } else {
+          setAutoRoundCountdown(count);
+        }
+      }, 1000);
+    } else {
+      // 5 rounds completed: Open Match End Result Modal
+      setTimeout(() => {
+        setShowMatchEndModal(true);
+      }, 1200);
+    }
+  };
+
+  // Advance to Next Round (Round 1 -> 2 -> 3 -> 4 -> 5)
+  const handleNextRound = () => {
+    if (autoRoundTimerRef.current) clearInterval(autoRoundTimerRef.current);
     if (aiTimeoutRef.current) clearTimeout(aiTimeoutRef.current);
+
+    setIsTransitioningRound(true);
+    playSound('pop');
+
+    setTimeout(() => {
+      setBoard(resetBoard());
+      setWinnerInfo(null);
+      setIsDraw(false);
+      setAutoRoundCountdown(null);
+      setCurrentRound((prev) => prev + 1);
+      setCurrentTurn('X');
+      setTimeLeft(timerSetting);
+      setIsAiThinking(false);
+      setIsTransitioningRound(false);
+    }, 200);
+  };
+
+  // Forfeit / Give Up current round
+  const handleGiveUpConfirm = () => {
+    setShowGiveUpModal(false);
+    if (isRoundEnded) return;
+    if (aiTimeoutRef.current) clearTimeout(aiTimeoutRef.current);
+
+    playSound('draw');
+    const outcome = { winner: 'O', forfeited: true };
+    setWinnerInfo(outcome);
+    const newScores = { ...scores, O: scores.O + 1 };
+    setScores(newScores);
+    setRoundHistory((prev) => [...prev, { round: currentRound, winner: 'O', forfeited: true }]);
+    setIsAiThinking(false);
+    handlePostRound(outcome, newScores);
+  };
+
+  // Fresh 5-Round Match Rematch
+  const handleRematch = () => {
+    if (autoRoundTimerRef.current) clearInterval(autoRoundTimerRef.current);
+    if (aiTimeoutRef.current) clearTimeout(aiTimeoutRef.current);
+
     playSound('pop');
     setBoard(resetBoard());
     setWinnerInfo(null);
     setIsDraw(false);
-    setShowFinishModal(false);
+    setCurrentRound(1);
+    setScores({ X: 0, O: 0, draws: 0 });
+    setRoundHistory([]);
     setCurrentTurn('X');
     setTimeLeft(timerSetting);
     setIsAiThinking(false);
+    setShowMatchEndModal(false);
+    setAutoRoundCountdown(null);
   };
 
-  // Forfeit / Give Up
-  const handlePlayerForfeit = () => {
-    if (winnerInfo || isDraw) return;
-    if (aiTimeoutRef.current) clearTimeout(aiTimeoutRef.current);
-    playSound('draw');
-    setWinnerInfo({ winner: 'O', forfeited: true });
-    setScores((prev) => ({ ...prev, ai: prev.ai + 1 }));
-    setShowFinishModal(true);
-    setIsAiThinking(false);
+  // Format seconds to mm:ss
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
   };
 
-  // Difficulty change
-  const handleDifficultyChange = (newDiff) => {
-    playSound('click');
-    setDifficulty(newDiff);
-    setStoredDifficulty(newDiff);
-  };
+  const timerPercentage = timerSetting > 0 ? (timeLeft / timerSetting) * 100 : 100;
+  const isTimeWarning = timerSetting > 0 && timeLeft <= 15 && timeLeft > 6;
+  const isTimeCritical = timerSetting > 0 && timeLeft <= 6;
 
-  // Timer change (60s, 30s, 0 = unlimited)
-  const handleTimerChange = (newTimer) => {
-    playSound('click');
-    setTimerSetting(newTimer);
-    setStoredSinglePlayerTimer(newTimer);
-    setTimeLeft(newTimer);
-  };
-
-  // Reset Scoreboard
-  const handleResetScores = () => {
-    playSound('pop');
-    setScores({ human: 0, ai: 0, draws: 0 });
-  };
-
-  // Save Player Name from Modal
-  const handleSaveName = (e) => {
-    if (e) e.preventDefault();
-    const finalName = tempName.trim() || 'Player 1';
-    setPlayerName(finalName);
-    setStoredPlayerName(finalName);
-    setIsNameModalOpen(false);
-    playSound('pop');
-  };
-
-  // Calculate outcome meta for finish screen
-  const getOutcomeMeta = () => {
-    if (!winnerInfo && !isDraw) return null;
+  // In-Board Blurred Overlay (Matches Multiplayer Game.jsx)
+  const getRoundOverlay = () => {
+    if (!isRoundEnded) return null;
 
     if (winnerInfo?.forfeited) {
-      return {
-        type: 'forfeit',
-        icon: '🏳️',
-        title: 'You gave up!',
-        subtitle: 'Round was forfeited to AI',
-        titleColor: 'var(--color-coral)',
-        glowColor: 'rgba(255, 69, 58, 0.45)',
-        badgeBg: 'rgba(255, 69, 58, 0.18)',
-        badgeBorder: '2px solid var(--color-coral)',
-      };
+      return (
+        <>
+          <div style={{
+            width: '56px',
+            height: '56px',
+            borderRadius: '50%',
+            background: 'rgba(255, 69, 58, 0.18)',
+            border: '2px solid var(--color-coral)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '1.9rem',
+            boxShadow: '0 0 24px rgba(255, 69, 58, 0.4)',
+          }}>
+            🏳️
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', alignItems: 'center' }}>
+            <span style={{
+              fontSize: 'clamp(1.15rem, 3.8vw, 1.4rem)',
+              fontWeight: '900',
+              color: 'var(--color-coral)',
+              letterSpacing: '0.02em',
+            }}>
+              Round {currentRound} Surrendered
+            </span>
+            <span style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-secondary)' }}>
+              You forfeited this round
+            </span>
+          </div>
+
+          {currentRound < MAX_ROUNDS && (
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.45rem',
+              marginTop: '0.4rem',
+              padding: '0.35rem 0.85rem',
+              borderRadius: '16px',
+              background: 'rgba(255, 69, 58, 0.14)',
+              border: '1px solid rgba(255, 69, 58, 0.35)',
+              fontSize: '0.84rem',
+              fontWeight: '800',
+              color: 'var(--color-coral)',
+            }}>
+              <Timer size={14} />
+              <span>Next round in {autoRoundCountdown !== null ? autoRoundCountdown : 3}s...</span>
+            </div>
+          )}
+        </>
+      );
     }
 
     if (winnerInfo?.timeout) {
-      return {
-        type: 'timeout',
-        icon: '⏳',
-        title: 'Time ran out!',
-        subtitle: `You exceeded the ${timerSetting}s turn limit`,
-        titleColor: 'var(--color-coral)',
-        glowColor: 'rgba(255, 69, 58, 0.45)',
-        badgeBg: 'rgba(255, 69, 58, 0.18)',
-        badgeBorder: '2px solid var(--color-coral)',
-      };
+      return (
+        <>
+          <div style={{
+            width: '56px',
+            height: '56px',
+            borderRadius: '50%',
+            background: 'rgba(255, 69, 58, 0.18)',
+            border: '2px solid var(--color-coral)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '1.9rem',
+            boxShadow: '0 0 24px rgba(255, 69, 58, 0.4)',
+          }}>
+            ⏳
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', alignItems: 'center' }}>
+            <span style={{
+              fontSize: 'clamp(1.15rem, 3.8vw, 1.4rem)',
+              fontWeight: '900',
+              color: 'var(--color-coral)',
+              letterSpacing: '0.02em',
+            }}>
+              Round {currentRound} Timeout!
+            </span>
+            <span style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-secondary)' }}>
+              Time expired for your turn
+            </span>
+          </div>
+
+          {currentRound < MAX_ROUNDS && (
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.45rem',
+              marginTop: '0.4rem',
+              padding: '0.35rem 0.85rem',
+              borderRadius: '16px',
+              background: 'rgba(255, 69, 58, 0.14)',
+              border: '1px solid rgba(255, 69, 58, 0.35)',
+              fontSize: '0.84rem',
+              fontWeight: '800',
+              color: 'var(--color-coral)',
+            }}>
+              <Timer size={14} />
+              <span>Next round in {autoRoundCountdown !== null ? autoRoundCountdown : 3}s...</span>
+            </div>
+          )}
+        </>
+      );
+    }
+
+    if (isDraw) {
+      return (
+        <>
+          <div style={{
+            width: '56px',
+            height: '56px',
+            borderRadius: '50%',
+            background: 'rgba(255, 255, 255, 0.14)',
+            border: '2px solid var(--border-glass-bright)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '1.9rem',
+          }}>
+            🤝
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', alignItems: 'center' }}>
+            <span style={{
+              fontSize: 'clamp(1.15rem, 3.8vw, 1.4rem)',
+              fontWeight: '900',
+              color: 'var(--text-primary)',
+              letterSpacing: '0.02em',
+            }}>
+              Round {currentRound} Draw!
+            </span>
+            <span style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-secondary)' }}>
+              Scores tied this round
+            </span>
+          </div>
+
+          {currentRound < MAX_ROUNDS && (
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.45rem',
+              marginTop: '0.4rem',
+              padding: '0.35rem 0.85rem',
+              borderRadius: '16px',
+              background: 'rgba(56, 189, 248, 0.14)',
+              border: '1px solid rgba(56, 189, 248, 0.35)',
+              fontSize: '0.84rem',
+              fontWeight: '800',
+              color: 'var(--color-x)',
+            }}>
+              <Timer size={14} />
+              <span>Next round in {autoRoundCountdown !== null ? autoRoundCountdown : 3}s...</span>
+            </div>
+          )}
+        </>
+      );
     }
 
     if (winnerInfo?.winner === 'X') {
-      return {
-        type: 'win',
-        icon: '🏆',
-        title: 'Victory!',
-        subtitle: `Awesome move! You defeated the ${difficulty.toUpperCase()} AI`,
-        titleColor: 'var(--color-x)',
-        glowColor: 'var(--color-x-glow)',
-        badgeBg: 'rgba(10, 132, 255, 0.18)',
-        badgeBorder: '2px solid var(--color-x)',
-      };
+      return (
+        <>
+          <div style={{
+            width: '56px',
+            height: '56px',
+            borderRadius: '50%',
+            background: 'rgba(56, 189, 248, 0.18)',
+            border: '2px solid var(--color-x)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '1.9rem',
+            boxShadow: '0 0 24px var(--color-x-glow)',
+          }}>
+            🎉
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', alignItems: 'center' }}>
+            <span style={{
+              fontSize: 'clamp(1.15rem, 3.8vw, 1.4rem)',
+              fontWeight: '900',
+              color: 'var(--color-x)',
+              textShadow: '0 0 16px var(--color-x-glow)',
+              letterSpacing: '0.02em',
+            }}>
+              Round {currentRound} Victory!
+            </span>
+            <span style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-secondary)' }}>
+              You won this round!
+            </span>
+          </div>
+
+          {currentRound < MAX_ROUNDS && (
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.45rem',
+              marginTop: '0.4rem',
+              padding: '0.35rem 0.85rem',
+              borderRadius: '16px',
+              background: 'rgba(56, 189, 248, 0.14)',
+              border: '1px solid rgba(56, 189, 248, 0.35)',
+              fontSize: '0.84rem',
+              fontWeight: '800',
+              color: 'var(--color-x)',
+            }}>
+              <Timer size={14} />
+              <span>Next round in {autoRoundCountdown !== null ? autoRoundCountdown : 3}s...</span>
+            </div>
+          )}
+        </>
+      );
     }
 
-    if (winnerInfo?.winner === 'O') {
-      return {
-        type: 'lose',
-        icon: '💀',
-        title: 'Defeat!',
-        subtitle: `The ${difficulty.toUpperCase()} AI Bot won this round`,
-        titleColor: 'var(--color-o)',
-        glowColor: 'var(--color-o-glow)',
-        badgeBg: 'rgba(94, 92, 230, 0.18)',
-        badgeBorder: '2px solid var(--color-o)',
-      };
-    }
+    return (
+      <>
+        <div style={{
+          width: '56px',
+          height: '56px',
+          borderRadius: '50%',
+          background: 'rgba(129, 140, 248, 0.18)',
+          border: '2px solid var(--color-o)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: '1.9rem',
+          boxShadow: '0 0 24px var(--color-o-glow)',
+        }}>
+          💀
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', alignItems: 'center' }}>
+          <span style={{
+            fontSize: 'clamp(1.15rem, 3.8vw, 1.4rem)',
+            fontWeight: '900',
+            color: 'var(--color-o)',
+            textShadow: '0 0 16px var(--color-o-glow)',
+            letterSpacing: '0.02em',
+          }}>
+            Round {currentRound} Defeat!
+          </span>
+          <span style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-secondary)' }}>
+            AI Bot won this round
+          </span>
+        </div>
 
-    return {
-      type: 'draw',
-      icon: '🤝',
-      title: 'Match Draw!',
-      subtitle: 'Well played! Neither side could break through',
-      titleColor: 'var(--text-primary)',
-      glowColor: 'rgba(255, 255, 255, 0.25)',
-      badgeBg: 'rgba(255, 255, 255, 0.12)',
-      badgeBorder: '2px solid var(--border-glass-bright)',
-    };
+        {currentRound < MAX_ROUNDS && (
+          <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.45rem',
+            marginTop: '0.4rem',
+            padding: '0.35rem 0.85rem',
+            borderRadius: '16px',
+            background: 'rgba(129, 140, 248, 0.14)',
+            border: '1px solid rgba(129, 140, 248, 0.35)',
+            fontSize: '0.84rem',
+            fontWeight: '800',
+            color: 'var(--color-o)',
+          }}>
+            <Timer size={14} />
+            <span>Next round in {autoRoundCountdown !== null ? autoRoundCountdown : 3}s...</span>
+          </div>
+        )}
+      </>
+    );
   };
 
-  const outcomeMeta = getOutcomeMeta();
-  const timerPercentage = timerSetting > 0 ? Math.max(0, Math.min(100, (timeLeft / timerSetting) * 100)) : 100;
-  const isTimeCritical = timerSetting > 0 && timeLeft <= 10 && !winnerInfo && !isDraw;
-  const isTimeWarning = timerSetting > 0 && timeLeft <= 25 && !winnerInfo && !isDraw;
+  // Match Final Outcome
+  const isHumanMatchWinner = scores.X > scores.O;
+  const isAiMatchWinner = scores.O > scores.X;
+  const isMatchTied = scores.X === scores.O;
 
   return (
     <div className="app-container">
       <Header
-        showBack
-        backTo="/"
+        showBack={false}
+        showMenu
+        onGiveUp={() => setShowGiveUpModal(true)}
+        giveUpLabel="Forfeit Round"
         onRestart={handleRematch}
-        restartLabel="Restart Round"
-        onGiveUp={!winnerInfo && !isDraw ? handlePlayerForfeit : null}
-        giveUpLabel="Forfeit / Give Up"
+        restartLabel="Restart Match"
+        onLeaveRoom={() => setShowLeaveModal(true)}
+        leaveLabel="Exit to Home"
+        isMultiplayer={false}
       />
 
       <main className="main-content">
         <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          {/* iOS Segmented Controls Bar */}
-          <div style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '0.5rem',
-            marginBottom: '0.75rem',
-          }}>
-            {/* AI Level Segment */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.3rem',
-              padding: '4px 6px',
-              background: 'var(--bg-input)',
-              borderRadius: 'var(--radius-pill)',
-              border: '1px solid var(--border-glass)',
-              boxShadow: 'var(--glass-specular), var(--shadow-sm)',
-              backdropFilter: 'blur(24px)',
-              WebkitBackdropFilter: 'blur(24px)',
-            }}>
-              <span style={{ fontSize: '0.72rem', fontWeight: '800', color: 'var(--text-muted)', padding: '0 0.4rem', letterSpacing: '0.04em' }}>
-                AI:
-              </span>
-              {['Easy', 'Medium', 'Hard'].map((lvl) => {
-                const isSelected = difficulty.toLowerCase() === lvl.toLowerCase();
-                return (
-                  <button
-                    key={lvl}
-                    type="button"
-                    onClick={() => handleDifficultyChange(lvl.toLowerCase())}
-                    style={{
-                      padding: '0.3rem 0.8rem',
-                      borderRadius: 'var(--radius-pill)',
-                      border: isSelected ? '1px solid var(--color-x)' : '1px solid transparent',
-                      background: isSelected ? 'rgba(10, 132, 255, 0.22)' : 'transparent',
-                      color: isSelected ? 'var(--color-x)' : 'var(--text-secondary)',
-                      fontWeight: '800',
-                      fontSize: '0.8rem',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s cubic-bezier(0.25, 1, 0.5, 1)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.2rem',
-                      boxShadow: isSelected ? 'var(--glass-specular), 0 0 10px var(--color-x-glow)' : 'none'
-                    }}
-                  >
-                    {lvl}
-                    {isSelected && <Check size={11} />}
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Turn Timer Selector Segment */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.3rem',
-              padding: '4px 6px',
-              background: 'var(--bg-input)',
-              borderRadius: 'var(--radius-pill)',
-              border: '1px solid var(--border-glass)',
-              boxShadow: 'var(--glass-specular), var(--shadow-sm)',
-              backdropFilter: 'blur(24px)',
-              WebkitBackdropFilter: 'blur(24px)',
-            }}>
-              <span style={{ fontSize: '0.72rem', fontWeight: '800', color: 'var(--text-muted)', padding: '0 0.4rem', letterSpacing: '0.04em', display: 'flex', alignItems: 'center', gap: '3px' }}>
-                <Clock size={12} /> TIMER:
-              </span>
-              {[
-                { label: '60s', value: 60 },
-                { label: '30s', value: 30 },
-                { label: 'Off', value: 0 },
-              ].map((opt) => {
-                const isSelected = timerSetting === opt.value;
-                return (
-                  <button
-                    key={opt.label}
-                    type="button"
-                    onClick={() => handleTimerChange(opt.value)}
-                    style={{
-                      padding: '0.3rem 0.75rem',
-                      borderRadius: 'var(--radius-pill)',
-                      border: isSelected ? '1px solid var(--color-o)' : '1px solid transparent',
-                      background: isSelected ? 'rgba(94, 92, 230, 0.22)' : 'transparent',
-                      color: isSelected ? 'var(--color-o)' : 'var(--text-secondary)',
-                      fontWeight: '800',
-                      fontSize: '0.8rem',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s cubic-bezier(0.25, 1, 0.5, 1)',
-                      boxShadow: isSelected ? 'var(--glass-specular), 0 0 10px var(--color-o-glow)' : 'none'
-                    }}
-                  >
-                    {opt.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Scoreboard */}
+          {/* 5-Round Match Scoreboard (Matches Multiplayer) */}
           <div className="players-match-bar">
-            <div style={{ position: 'relative' }}>
-              <PlayerCard
-                name={playerName}
-                symbol="X"
-                score={scores.human}
-                isActiveTurn={currentTurn === 'X' && !winnerInfo && !isDraw}
-                isUser
-              />
-              <button
-                type="button"
-                onClick={() => {
-                  setTempName(playerName);
-                  setIsNameModalOpen(true);
-                }}
-                style={{
-                  position: 'absolute',
-                  top: '6px',
-                  right: '6px',
-                  background: 'rgba(255, 255, 255, 0.08)',
-                  border: '1px solid var(--border-glass)',
-                  borderRadius: '50%',
-                  width: '24px',
-                  height: '24px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  color: 'var(--text-secondary)'
-                }}
-                title="Edit Your Name"
-              >
-                <Edit2 size={12} />
-              </button>
-            </div>
+            <PlayerCard
+              name={playerName}
+              symbol="X"
+              score={scores.X}
+              isActiveTurn={currentTurn === 'X' && !isRoundEnded}
+              isUser
+            />
 
             <div className="match-vs-divider">
-              <span style={{ fontSize: '0.75rem', fontWeight: '900', color: '#64748b' }}>VS</span>
-              <span className="round-pill" style={{ textTransform: 'capitalize' }}>
-                {difficulty} AI
+              <span className="round-pill">
+                Round {currentRound} of {MAX_ROUNDS}
+              </span>
+              <span style={{ fontSize: '0.8rem', fontWeight: '900', color: '#64748b', marginTop: '2px' }}>
+                VS
               </span>
             </div>
 
             <PlayerCard
-              name="AI Bot"
+              name={`AI (${difficulty.toUpperCase()})`}
               symbol="O"
-              score={scores.ai}
-              isActiveTurn={currentTurn === 'O' && !winnerInfo && !isDraw}
+              score={scores.O}
+              isActiveTurn={currentTurn === 'O' && !isRoundEnded}
             />
           </div>
 
-          {/* Turn Timer Bar & Badge (if timer enabled) */}
-          {timerSetting > 0 && !winnerInfo && !isDraw && (
+          {/* Turn & Match Commentary */}
+          <PlayerStatus
+            message={
+              isMatchEnded
+                ? '5-Round Match Complete!'
+                : isRoundEnded
+                ? `Round ${currentRound} Complete`
+                : currentTurn === 'X'
+                ? (isTimeCritical ? '⚠️ Hurry up! Timer Running Out!' : 'Your Turn (X)')
+                : `AI Bot is thinking (O)...`
+            }
+            isThinking={currentTurn === 'O' && !isRoundEnded}
+            highlight={isRoundEnded ? 'x' : currentTurn === 'X' ? 'x' : 'o'}
+          />
+
+          {/* Turn Timer Bar & Monospace Badge */}
+          {!isRoundEnded && timerSetting > 0 && (
             <div style={{
               width: '100%',
               maxWidth: '380px',
-              margin: '0.45rem 0 0.75rem',
+              margin: '0.4rem 0 0.75rem',
               display: 'flex',
               flexDirection: 'column',
               gap: '0.35rem',
@@ -500,7 +662,7 @@ const SinglePlayer = () => {
                     fontWeight: '700',
                     color: currentTurn === 'X' ? 'var(--text-primary)' : 'var(--text-secondary)'
                   }}>
-                    {currentTurn === 'X' ? 'Your Turn Time' : 'AI Turn (Paused)'}
+                    {currentTurn === 'X' ? `Your Turn Time (${timerSetting}s limit)` : 'AI Turn (Paused)'}
                   </span>
                 </div>
 
@@ -545,314 +707,332 @@ const SinglePlayer = () => {
             </div>
           )}
 
-          {/* Turn Commentary */}
-          <PlayerStatus
-            message={
-              winnerInfo || isDraw
-                ? (outcomeMeta?.title ? `Round Ended: ${outcomeMeta.title}` : 'Round Complete')
-                : currentTurn === 'X'
-                ? (isTimeCritical ? '⚠️ Hurry up! Time running out!' : 'Your Turn (X)')
-                : 'AI Bot is thinking (O)...'
-            }
-            isThinking={isAiThinking && !winnerInfo && !isDraw}
-            highlight={winnerInfo || isDraw ? 'x' : currentTurn === 'X' ? 'x' : 'o'}
-          />
-
-          {/* 3x3 Board with Winning Highlights */}
+          {/* 3x3 Game Board with In-Board Blurred Overlay */}
           <GameBoard
             board={board}
             onCellClick={handleCellClick}
-            disabled={Boolean(winnerInfo || isDraw || currentTurn !== 'X' || isAiThinking)}
+            disabled={Boolean(isRoundEnded || currentTurn !== 'X' || isAiThinking)}
             winningLine={winnerInfo?.winningLine}
+            overlay={getRoundOverlay()}
           />
 
-          {/* Bottom Action Controls */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem', marginTop: '0.75rem', width: '100%', maxWidth: '380px' }}>
-            {(winnerInfo || isDraw) ? (
-              <div style={{ display: 'flex', gap: '0.65rem', width: '100%' }}>
-                <Button
-                  variant="primary"
-                  size="md"
-                  className="btn-block"
-                  onClick={handleRematch}
-                  icon={RotateCcw}
-                  style={{
-                    boxShadow: 'var(--glass-specular), 0 8px 24px var(--color-x-glow)',
-                    fontWeight: '900',
-                  }}
-                >
-                  Play Again
-                </Button>
-                <Button
-                  variant="secondary"
-                  size="md"
-                  onClick={() => setShowFinishModal(true)}
-                  icon={Trophy}
-                  style={{ whiteSpace: 'nowrap' }}
-                >
-                  Scorecard
-                </Button>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', gap: '0.65rem', width: '100%' }}>
-                <Button
-                  variant="secondary"
-                  size="md"
-                  className="btn-block"
-                  onClick={handleRematch}
-                  icon={RotateCcw}
-                >
-                  Restart Round
-                </Button>
-                <Button
-                  variant="secondary"
-                  size="md"
-                  className="btn-block"
-                  onClick={() => {
-                    playSound('click');
-                    navigate('/');
-                  }}
-                  icon={HomeIcon}
-                >
-                  Back to Home
-                </Button>
-              </div>
-            )}
-          </div>
+          {/* Controls Bar - Next Round Button after round ends */}
+          {isRoundEnded && currentRound < MAX_ROUNDS && (
+            <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.75rem', width: '100%', maxWidth: '380px' }}>
+              <Button
+                variant="primary"
+                size="lg"
+                className="btn-block"
+                onClick={handleNextRound}
+                disabled={isTransitioningRound}
+                icon={Play}
+                style={{
+                  boxShadow: '0 0 25px var(--color-x-glow)',
+                  fontSize: '1.15rem'
+                }}
+              >
+                {isTransitioningRound ? 'Loading Next Round...' : `NEXT ROUND (${currentRound + 1}/${MAX_ROUNDS})`}
+              </Button>
+            </div>
+          )}
+
+          {/* Active Round Controls Bar */}
+          {!isRoundEnded && (
+            <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.75rem', width: '100%', maxWidth: '380px' }}>
+              <Button
+                variant="danger"
+                size="md"
+                className="btn-block"
+                onClick={() => setShowGiveUpModal(true)}
+                icon={Flag}
+              >
+                Forfeit
+              </Button>
+              <Button
+                variant="secondary"
+                size="md"
+                className="btn-block"
+                onClick={() => setShowSettingsModal(true)}
+                icon={Settings}
+              >
+                Settings
+              </Button>
+            </div>
+          )}
         </div>
+      </main>
 
-        {/* Dedicated iOS Liquid Glass Finish & Game Over Outcome Screen Modal */}
-        {showFinishModal && outcomeMeta && createPortal(
-          <div className="modal-overlay" onClick={() => setShowFinishModal(false)}>
-            <div
-              className="modal-card"
-              onClick={(e) => e.stopPropagation()}
-              style={{
-                maxWidth: '430px',
-                textAlign: 'center',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: '1.25rem',
-                padding: 'clamp(1.6rem, 5vw, 2.25rem) clamp(1.2rem, 4vw, 1.85rem)',
-              }}
+      {/* Give Up / Forfeit Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showGiveUpModal}
+        title="Forfeit Round?"
+        message="Are you sure you want to surrender this round? A victory point will be awarded to the AI Bot."
+        confirmText="Yes, Forfeit"
+        confirmVariant="danger"
+        onConfirm={handleGiveUpConfirm}
+        onCancel={() => setShowGiveUpModal(false)}
+      />
+
+      {/* Leave Match Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showLeaveModal}
+        title="Exit to Home?"
+        message="Are you sure you want to leave this singleplayer match? All current progress will be reset."
+        confirmText="Exit Match"
+        confirmVariant="secondary"
+        onConfirm={() => {
+          setShowLeaveModal(false);
+          navigate('/');
+        }}
+        onCancel={() => setShowLeaveModal(false)}
+      />
+
+      {/* Settings Modal (AI Difficulty & Turn Timer) */}
+      {showSettingsModal && createPortal(
+        <div className="modal-overlay" onClick={() => setShowSettingsModal(false)}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '420px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Settings size={20} color="var(--color-x)" /> Singleplayer Settings
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowSettingsModal(false)}
+                className="btn-icon"
+                style={{ width: '32px', height: '32px' }}
+              >
+                <CloseIcon size={18} />
+              </button>
+            </div>
+
+            {/* Difficulty Selector */}
+            <div style={{ marginBottom: '1.25rem' }}>
+              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
+                AI DIFFICULTY
+              </label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
+                {['easy', 'medium', 'hard'].map((diff) => {
+                  const isSelected = difficulty === diff;
+                  return (
+                    <button
+                      key={diff}
+                      type="button"
+                      onClick={() => {
+                        playSound('click');
+                        setDifficulty(diff);
+                        setStoredDifficulty(diff);
+                      }}
+                      style={{
+                        padding: '0.65rem 0.4rem',
+                        borderRadius: '12px',
+                        border: isSelected ? '1.5px solid var(--color-x)' : '1px solid var(--border-glass)',
+                        background: isSelected ? 'rgba(56, 189, 248, 0.15)' : 'var(--bg-card)',
+                        color: isSelected ? 'var(--color-x)' : 'var(--text-secondary)',
+                        fontWeight: '800',
+                        fontSize: '0.88rem',
+                        textTransform: 'capitalize',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                      }}
+                    >
+                      {diff}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Turn Timer Selector */}
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
+                TURN TIMER
+              </label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem' }}>
+                {[
+                  { label: '30s', val: 30 },
+                  { label: '60s', val: 60 },
+                  { label: '120s', val: 120 },
+                  { label: 'Off', val: 0 },
+                ].map((item) => {
+                  const isSelected = timerSetting === item.val;
+                  return (
+                    <button
+                      key={item.val}
+                      type="button"
+                      onClick={() => {
+                        playSound('click');
+                        setTimerSetting(item.val);
+                        setStoredSinglePlayerTimer(item.val);
+                        setTimeLeft(item.val);
+                      }}
+                      style={{
+                        padding: '0.65rem 0.4rem',
+                        borderRadius: '12px',
+                        border: isSelected ? '1.5px solid var(--color-x)' : '1px solid var(--border-glass)',
+                        background: isSelected ? 'rgba(56, 189, 248, 0.15)' : 'var(--bg-card)',
+                        color: isSelected ? 'var(--color-x)' : 'var(--text-secondary)',
+                        fontWeight: '800',
+                        fontSize: '0.88rem',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                      }}
+                    >
+                      {item.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <Button
+              variant="primary"
+              size="md"
+              className="btn-block"
+              onClick={() => setShowSettingsModal(false)}
             >
-              {/* Outcome Badge Icon */}
-              <div style={{
-                width: '74px',
-                height: '74px',
-                borderRadius: '50%',
-                background: outcomeMeta.badgeBg,
-                border: outcomeMeta.badgeBorder,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '2.4rem',
-                boxShadow: `0 0 32px ${outcomeMeta.glowColor}`,
-                animation: 'pulse 2s infinite',
-              }}>
-                {outcomeMeta.icon}
+              Apply & Close
+            </Button>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* 5-Round Match End Result Modal (Matches Multiplayer Result.jsx) */}
+      {showMatchEndModal && createPortal(
+        <div className="modal-overlay">
+          <div
+            className="modal-card"
+            style={{
+              maxWidth: '440px',
+              textAlign: 'center',
+              padding: '2rem 1.5rem',
+              animation: 'scaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+            }}
+          >
+            {/* Trophy / Result Icon */}
+            <div style={{
+              width: '84px',
+              height: '84px',
+              margin: '0 auto 1.25rem',
+              borderRadius: '50%',
+              background: isHumanMatchWinner
+                ? 'linear-gradient(135deg, rgba(250, 204, 21, 0.25), rgba(245, 158, 11, 0.35))'
+                : isMatchTied
+                ? 'rgba(255, 255, 255, 0.12)'
+                : 'linear-gradient(135deg, rgba(129, 140, 248, 0.25), rgba(99, 102, 241, 0.35))',
+              border: `2px solid ${isHumanMatchWinner ? '#fbbf24' : isMatchTied ? 'var(--border-glass-bright)' : 'var(--color-o)'}`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '2.75rem',
+              boxShadow: isHumanMatchWinner ? '0 0 35px rgba(251, 191, 36, 0.5)' : 'none',
+            }}>
+              {isHumanMatchWinner ? '🏆' : isMatchTied ? '🤝' : '💀'}
+            </div>
+
+            <h2 style={{
+              fontSize: '1.75rem',
+              fontWeight: '900',
+              letterSpacing: '-0.02em',
+              color: isHumanMatchWinner ? 'var(--color-x)' : isMatchTied ? 'var(--text-primary)' : 'var(--color-o)',
+              marginBottom: '0.4rem',
+            }}>
+              {isHumanMatchWinner ? 'MATCH VICTORY!' : isMatchTied ? 'MATCH TIED!' : 'MATCH DEFEAT!'}
+            </h2>
+
+            <p style={{
+              fontSize: '0.95rem',
+              fontWeight: '700',
+              color: 'var(--text-secondary)',
+              marginBottom: '1.5rem',
+            }}>
+              {isHumanMatchWinner
+                ? `Incredible! You defeated the ${difficulty.toUpperCase()} AI in a 5-round battle!`
+                : isMatchTied
+                ? 'All 5 rounds completed with equal scores!'
+                : `The ${difficulty.toUpperCase()} AI Bot claimed match victory.`}
+            </p>
+
+            {/* Scorecard Pill */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-around',
+              padding: '1rem',
+              borderRadius: '16px',
+              background: 'rgba(255, 255, 255, 0.04)',
+              border: '1px solid var(--border-glass)',
+              marginBottom: '1.75rem',
+            }}>
+              <div>
+                <span style={{ display: 'block', fontSize: '0.78rem', fontWeight: '800', color: 'var(--color-x)' }}>
+                  {playerName} (X)
+                </span>
+                <span style={{ fontSize: '1.8rem', fontWeight: '900', color: 'var(--text-primary)' }}>
+                  {scores.X}
+                </span>
               </div>
 
-              {/* Title and Subtitle */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', alignItems: 'center' }}>
-                <h2 style={{
-                  fontSize: 'clamp(1.75rem, 5.5vw, 2.15rem)',
-                  fontWeight: '900',
-                  color: outcomeMeta.titleColor,
-                  textShadow: `0 0 20px ${outcomeMeta.glowColor}`,
-                  letterSpacing: '-0.02em',
-                  margin: 0,
-                }}>
-                  {outcomeMeta.title}
-                </h2>
-                <p style={{
-                  fontSize: 'clamp(0.92rem, 2.8vw, 1.02rem)',
-                  fontWeight: '700',
-                  color: 'var(--text-secondary)',
-                  margin: 0,
-                  maxWidth: '320px',
-                  lineHeight: '1.4',
-                }}>
-                  {outcomeMeta.subtitle}
-                </p>
+              <div style={{ fontSize: '1.2rem', fontWeight: '900', color: 'var(--text-muted)' }}>
+                -
               </div>
 
-              {/* Score Summary Card */}
-              <div style={{
-                width: '100%',
-                padding: '1.15rem 1rem',
-                background: 'var(--bg-input)',
-                borderRadius: 'var(--radius-lg)',
-                border: '1.5px solid var(--border-glass)',
-                boxShadow: 'var(--shadow-sm), var(--glass-inner-bevel)',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '0.75rem',
-              }}>
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  padding: '0 0.25rem',
-                }}>
-                  <span style={{ fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)' }}>
-                    CURRENT SCOREBOARD
-                  </span>
-                  <span style={{
-                    fontSize: '0.72rem',
-                    fontWeight: '800',
-                    color: 'var(--color-x)',
-                    background: 'rgba(10, 132, 255, 0.12)',
-                    padding: '2px 8px',
-                    borderRadius: 'var(--radius-pill)',
-                    border: '1px solid rgba(10, 132, 255, 0.3)',
-                    textTransform: 'capitalize'
-                  }}>
-                    {difficulty} AI
-                  </span>
-                </div>
+              <div>
+                <span style={{ display: 'block', fontSize: '0.78rem', fontWeight: '800', color: 'var(--color-o)' }}>
+                  AI ({difficulty}) (O)
+                </span>
+                <span style={{ fontSize: '1.8rem', fontWeight: '900', color: 'var(--text-primary)' }}>
+                  {scores.O}
+                </span>
+              </div>
 
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-around',
-                  padding: '0.2rem 0',
-                }}>
-                  {/* Player (X) */}
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <span style={{ fontSize: '0.9rem', fontWeight: '800', color: 'var(--color-x)' }}>
-                      {playerName} (X)
-                    </span>
-                    <span style={{ fontSize: '2.2rem', fontWeight: '900', fontFamily: 'var(--font-mono)', color: 'var(--color-x)' }}>
-                      {scores.human}
-                    </span>
+              {scores.draws > 0 && (
+                <>
+                  <div style={{ fontSize: '1.2rem', fontWeight: '900', color: 'var(--text-muted)' }}>
+                    -
                   </div>
-
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <span style={{ fontSize: '0.78rem', fontWeight: '800', color: 'var(--text-muted)' }}>
-                      DRAWS
+                  <div>
+                    <span style={{ display: 'block', fontSize: '0.78rem', fontWeight: '800', color: 'var(--text-secondary)' }}>
+                      Draws
                     </span>
-                    <span style={{ fontSize: '1.6rem', fontWeight: '900', fontFamily: 'var(--font-mono)', color: 'var(--text-secondary)' }}>
+                    <span style={{ fontSize: '1.8rem', fontWeight: '900', color: 'var(--text-secondary)' }}>
                       {scores.draws}
                     </span>
                   </div>
-
-                  {/* AI Bot (O) */}
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <span style={{ fontSize: '0.9rem', fontWeight: '800', color: 'var(--color-o)' }}>
-                      AI Bot (O)
-                    </span>
-                    <span style={{ fontSize: '2.2rem', fontWeight: '900', fontFamily: 'var(--font-mono)', color: 'var(--color-o)' }}>
-                      {scores.ai}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', width: '100%' }}>
-                <Button
-                  variant="primary"
-                  size="lg"
-                  className="btn-block"
-                  onClick={handleRematch}
-                  icon={RotateCcw}
-                  style={{
-                    boxShadow: 'var(--glass-specular), 0 8px 28px var(--color-x-glow)',
-                    fontSize: '1.1rem',
-                    fontWeight: '900',
-                  }}
-                >
-                  PLAY AGAIN
-                </Button>
-
-                <div style={{ display: 'flex', gap: '0.65rem', width: '100%' }}>
-                  <Button
-                    variant="secondary"
-                    size="md"
-                    className="btn-block"
-                    onClick={() => setShowFinishModal(false)}
-                    style={{ fontSize: '0.9rem' }}
-                  >
-                    View Board
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    size="md"
-                    className="btn-block"
-                    onClick={handleResetScores}
-                    style={{ fontSize: '0.9rem' }}
-                  >
-                    Reset Scores
-                  </Button>
-                </div>
-
-                <Button
-                  variant="secondary"
-                  size="md"
-                  className="btn-block"
-                  onClick={() => {
-                    playSound('click');
-                    navigate('/');
-                  }}
-                  icon={HomeIcon}
-                  style={{ marginTop: '0.15rem' }}
-                >
-                  Back to Home
-                </Button>
-              </div>
+                </>
+              )}
             </div>
-          </div>,
-          document.body
-        )}
 
-        {/* Edit Player Name Modal */}
-        {isNameModalOpen && createPortal(
-          <div className="modal-overlay" onClick={() => setIsNameModalOpen(false)}>
-            <div className="modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '400px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-                <h3 style={{ fontSize: '1.3rem', fontWeight: '900', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <Edit2 size={20} color="var(--color-x)" />
-                  Your Player Name
-                </h3>
-                <button
-                  onClick={() => setIsNameModalOpen(false)}
-                  style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
-                >
-                  <X size={20} />
-                </button>
-              </div>
+            {/* Action Buttons */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <Button
+                variant="primary"
+                size="lg"
+                className="btn-block"
+                onClick={handleRematch}
+                icon={RotateCcw}
+                style={{ fontSize: '1.05rem', boxShadow: '0 0 20px var(--color-x-glow)' }}
+              >
+                Play Again (5-Round Rematch)
+              </Button>
 
-              <form onSubmit={handleSaveName} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                <div className="input-group">
-                  <label className="input-label" htmlFor="edit-name">Display Name</label>
-                  <input
-                    id="edit-name"
-                    type="text"
-                    className="text-input"
-                    placeholder="Enter your name"
-                    value={tempName}
-                    maxLength={25}
-                    onChange={(e) => setTempName(e.target.value)}
-                    autoFocus
-                  />
-                </div>
-
-                <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
-                  <Button variant="secondary" type="button" onClick={() => setIsNameModalOpen(false)} className="btn-block">
-                    Cancel
-                  </Button>
-                  <Button variant="primary" type="submit" className="btn-block">
-                    Save Name
-                  </Button>
-                </div>
-              </form>
+              <Button
+                variant="secondary"
+                size="md"
+                className="btn-block"
+                onClick={() => {
+                  playSound('click');
+                  navigate('/');
+                }}
+                icon={HomeIcon}
+              >
+                Back to Home
+              </Button>
             </div>
-          </div>,
-          document.body
-        )}
-      </main>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 };
