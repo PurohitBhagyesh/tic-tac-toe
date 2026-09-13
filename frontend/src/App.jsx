@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import Home from './pages/Home';
 import SinglePlayer from './pages/SinglePlayer';
 import Multiplayer from './pages/Multiplayer';
@@ -38,6 +39,8 @@ function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
+
+      <SpeedInsights />
     </>
   );
 }
