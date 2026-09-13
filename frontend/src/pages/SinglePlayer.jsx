@@ -245,7 +245,7 @@ const SinglePlayer = () => {
   const isTimeWarning = timerSetting > 0 && timeLeft <= 15 && timeLeft > 6;
   const isTimeCritical = timerSetting > 0 && timeLeft <= 6;
 
-  // In-Board Blurred Outcome Overlay
+  // In-Board Blurred Outcome Overlay (with embedded Rematch button)
   const getRoundOverlay = () => {
     if (!isRoundEnded) return null;
 
@@ -253,32 +253,54 @@ const SinglePlayer = () => {
       return (
         <>
           <div style={{
-            width: '56px',
-            height: '56px',
+            width: '52px',
+            height: '52px',
             borderRadius: '50%',
             background: 'rgba(255, 69, 58, 0.18)',
             border: '2px solid var(--color-coral)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontSize: '1.9rem',
+            fontSize: '1.75rem',
             boxShadow: '0 0 24px rgba(255, 69, 58, 0.4)',
           }}>
             ⏳
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', alignItems: 'center' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', alignItems: 'center' }}>
             <span style={{
-              fontSize: 'clamp(1.15rem, 3.8vw, 1.4rem)',
+              fontSize: 'clamp(1.15rem, 3.8vw, 1.35rem)',
               fontWeight: '900',
               color: 'var(--color-coral)',
               letterSpacing: '0.02em',
             }}>
               Time Ran Out!
             </span>
-            <span style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-secondary)' }}>
+            <span style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)' }}>
               AI Bot was awarded the win
             </span>
           </div>
+          <button
+            type="button"
+            onClick={handleRematch}
+            style={{
+              marginTop: '0.4rem',
+              padding: '0.65rem 1.4rem',
+              borderRadius: '14px',
+              border: 'none',
+              background: 'linear-gradient(180deg, #0a84ff 0%, #0066d6 100%)',
+              color: '#ffffff',
+              fontSize: '0.92rem',
+              fontWeight: '800',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.45rem',
+              cursor: 'pointer',
+              boxShadow: '0 0 20px var(--color-x-glow)',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            <RotateCcw size={16} /> Rematch
+          </button>
         </>
       );
     }
@@ -287,31 +309,53 @@ const SinglePlayer = () => {
       return (
         <>
           <div style={{
-            width: '56px',
-            height: '56px',
+            width: '52px',
+            height: '52px',
             borderRadius: '50%',
             background: 'rgba(255, 255, 255, 0.14)',
             border: '2px solid var(--border-glass-bright)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontSize: '1.9rem',
+            fontSize: '1.75rem',
           }}>
             🤝
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', alignItems: 'center' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', alignItems: 'center' }}>
             <span style={{
-              fontSize: 'clamp(1.15rem, 3.8vw, 1.4rem)',
+              fontSize: 'clamp(1.15rem, 3.8vw, 1.35rem)',
               fontWeight: '900',
               color: 'var(--text-primary)',
               letterSpacing: '0.02em',
             }}>
               Match Draw!
             </span>
-            <span style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-secondary)' }}>
+            <span style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)' }}>
               Well played! Board is tied.
             </span>
           </div>
+          <button
+            type="button"
+            onClick={handleRematch}
+            style={{
+              marginTop: '0.4rem',
+              padding: '0.65rem 1.4rem',
+              borderRadius: '14px',
+              border: 'none',
+              background: 'linear-gradient(180deg, #0a84ff 0%, #0066d6 100%)',
+              color: '#ffffff',
+              fontSize: '0.92rem',
+              fontWeight: '800',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.45rem',
+              cursor: 'pointer',
+              boxShadow: '0 0 20px var(--color-x-glow)',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            <RotateCcw size={16} /> Rematch
+          </button>
         </>
       );
     }
@@ -320,22 +364,22 @@ const SinglePlayer = () => {
       return (
         <>
           <div style={{
-            width: '56px',
-            height: '56px',
+            width: '52px',
+            height: '52px',
             borderRadius: '50%',
             background: 'rgba(56, 189, 248, 0.18)',
             border: '2px solid var(--color-x)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontSize: '1.9rem',
+            fontSize: '1.75rem',
             boxShadow: '0 0 24px var(--color-x-glow)',
           }}>
             🎉
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', alignItems: 'center' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', alignItems: 'center' }}>
             <span style={{
-              fontSize: 'clamp(1.15rem, 3.8vw, 1.4rem)',
+              fontSize: 'clamp(1.15rem, 3.8vw, 1.35rem)',
               fontWeight: '900',
               color: 'var(--color-x)',
               textShadow: '0 0 16px var(--color-x-glow)',
@@ -343,10 +387,32 @@ const SinglePlayer = () => {
             }}>
               Victory!
             </span>
-            <span style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-secondary)' }}>
+            <span style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)' }}>
               You defeated the {difficulty.toUpperCase()} AI!
             </span>
           </div>
+          <button
+            type="button"
+            onClick={handleRematch}
+            style={{
+              marginTop: '0.4rem',
+              padding: '0.65rem 1.4rem',
+              borderRadius: '14px',
+              border: 'none',
+              background: 'linear-gradient(180deg, #0a84ff 0%, #0066d6 100%)',
+              color: '#ffffff',
+              fontSize: '0.92rem',
+              fontWeight: '800',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.45rem',
+              cursor: 'pointer',
+              boxShadow: '0 0 20px var(--color-x-glow)',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            <RotateCcw size={16} /> Rematch
+          </button>
         </>
       );
     }
@@ -354,22 +420,22 @@ const SinglePlayer = () => {
     return (
       <>
         <div style={{
-          width: '56px',
-          height: '56px',
+          width: '52px',
+          height: '52px',
           borderRadius: '50%',
           background: 'rgba(129, 140, 248, 0.18)',
           border: '2px solid var(--color-o)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          fontSize: '1.9rem',
+          fontSize: '1.75rem',
           boxShadow: '0 0 24px var(--color-o-glow)',
         }}>
           💀
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', alignItems: 'center' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', alignItems: 'center' }}>
           <span style={{
-            fontSize: 'clamp(1.15rem, 3.8vw, 1.4rem)',
+            fontSize: 'clamp(1.15rem, 3.8vw, 1.35rem)',
             fontWeight: '900',
             color: 'var(--color-o)',
             textShadow: '0 0 16px var(--color-o-glow)',
@@ -377,10 +443,32 @@ const SinglePlayer = () => {
           }}>
             Defeat!
           </span>
-          <span style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-secondary)' }}>
+          <span style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-secondary)' }}>
             AI Bot won this round
           </span>
         </div>
+        <button
+          type="button"
+          onClick={handleRematch}
+          style={{
+            marginTop: '0.4rem',
+            padding: '0.65rem 1.4rem',
+            borderRadius: '14px',
+            border: 'none',
+            background: 'linear-gradient(180deg, #0a84ff 0%, #0066d6 100%)',
+            color: '#ffffff',
+            fontSize: '0.92rem',
+            fontWeight: '800',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.45rem',
+            cursor: 'pointer',
+            boxShadow: '0 0 20px var(--color-x-glow)',
+            transition: 'all 0.2s ease',
+          }}
+        >
+          <RotateCcw size={16} /> Rematch
+        </button>
       </>
     );
   };
@@ -716,7 +804,7 @@ const SinglePlayer = () => {
               </div>
             )}
 
-            {/* 3x3 Game Board with In-Board Blurred Outcome Overlay */}
+            {/* 3x3 Game Board with In-Board Blurred Outcome Overlay (Zero items below board) */}
             <GameBoard
               board={board}
               onCellClick={handleCellClick}
@@ -724,70 +812,6 @@ const SinglePlayer = () => {
               winningLine={winnerInfo?.winningLine}
               overlay={getRoundOverlay()}
             />
-
-            {/* Action Buttons Row */}
-            {isRoundEnded ? (
-              /* Round Finished: Prominent REMATCH and Setup Controls */
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem', marginTop: '0.85rem', width: '100%', maxWidth: '380px' }}>
-                <Button
-                  variant="primary"
-                  size="lg"
-                  className="btn-block"
-                  onClick={handleRematch}
-                  icon={RotateCcw}
-                  style={{
-                    fontSize: '1.1rem',
-                    fontWeight: '900',
-                    boxShadow: '0 0 25px var(--color-x-glow)',
-                  }}
-                >
-                  REMATCH
-                </Button>
-
-                <div style={{ display: 'flex', gap: '0.65rem' }}>
-                  <Button
-                    variant="secondary"
-                    size="md"
-                    className="btn-block"
-                    onClick={() => setShowSettingsModal(true)}
-                    icon={Settings}
-                  >
-                    Settings
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    size="md"
-                    className="btn-block"
-                    onClick={() => setShowLeaveModal(true)}
-                    icon={LogOut}
-                  >
-                    Leave Game
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              /* Round in Progress: Leave Game & Settings (NO Give Up) */
-              <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.75rem', width: '100%', maxWidth: '380px' }}>
-                <Button
-                  variant="secondary"
-                  size="md"
-                  className="btn-block"
-                  onClick={() => setShowLeaveModal(true)}
-                  icon={LogOut}
-                >
-                  Leave Game
-                </Button>
-                <Button
-                  variant="secondary"
-                  size="md"
-                  className="btn-block"
-                  onClick={() => setShowSettingsModal(true)}
-                  icon={Settings}
-                >
-                  Settings
-                </Button>
-              </div>
-            )}
           </div>
         )}
       </main>
