@@ -2,9 +2,14 @@
 const getApiBaseUrl = () => {
   let url = import.meta.env.VITE_API_URL;
   if (!url || typeof url !== 'string' || url.trim() === '') {
-    // In production with reverse proxy / multi-service rewrites, use relative path
-    if (typeof window !== 'undefined' && window.location && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-      return '';
+    if (typeof window !== 'undefined' && window.location) {
+      const hostname = window.location.hostname;
+      if (hostname.endsWith('github.io') || hostname.endsWith('vercel.app')) {
+        return 'https://tic-tac-toe-xcsr.onrender.com';
+      }
+      if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
+        return '';
+      }
     }
     return 'http://localhost:5000';
   }

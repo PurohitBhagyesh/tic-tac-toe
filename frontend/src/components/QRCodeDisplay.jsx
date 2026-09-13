@@ -5,7 +5,9 @@ import Button from './Button';
 
 const QRCodeDisplay = ({ roomCode }) => {
   const [copiedLink, setCopiedLink] = useState(false);
-  const joinUrl = `${window.location.origin}/join/${roomCode}`;
+  const baseUrl = import.meta.env.BASE_URL || '/';
+  const cleanBase = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+  const joinUrl = `${window.location.origin}${cleanBase}/join/${roomCode}`;
 
   const handleShare = async () => {
     if (navigator.share) {

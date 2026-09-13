@@ -24,7 +24,7 @@ function App() {
         <div className="liquid-orb liquid-orb-3" />
       </div>
 
-      <BrowserRouter>
+      <BrowserRouter basename={import.meta.env.BASE_URL}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/singleplayer" element={<SinglePlayer />} />
