@@ -2,7 +2,8 @@
 
 <div align="center">
 
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-tic--tac--toe--purohitbhagyesh.vercel.app-0070F3?style=for-the-badge&logo=vercel&logoColor=white)](https://tic-tac-toe-purohitbhagyesh.vercel.app)
+[![Live Demo (Vercel)](https://img.shields.io/badge/Live%20Demo-Vercel%20App-0070F3?style=for-the-badge&logo=vercel&logoColor=white)](https://tic-tac-toe-purohitbhagyesh.vercel.app)
+[![Live Demo (GitHub Pages)](https://img.shields.io/badge/GitHub%20Pages-purohitbhagyesh.github.io%2Ftic--tac--toe-22C55E?style=for-the-badge&logo=githubpages&logoColor=white)](https://purohitbhagyesh.github.io/tic-tac-toe/)
 [![GitHub Repository](https://img.shields.io/badge/GitHub-Repository-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/PurohitBhagyesh/tic-tac-toe)
 [![Backend Status](https://img.shields.io/badge/Backend-Render%20Online-00C7B7?style=for-the-badge&logo=render&logoColor=white)](https://tic-tac-toe-xcsr.onrender.com/api/health)
 [![License: MIT](https://img.shields.io/badge/License-MIT-F59E0B.svg?style=for-the-badge)](LICENSE)
@@ -23,7 +24,7 @@
 
 <br/>
 
-[🕹️ Play Live Demo](https://tic-tac-toe-purohitbhagyesh.vercel.app) • [✨ Key Features](#-key-features) • [📸 UI Gallery](#-screenshots--ui-gallery) • [🛠️ Tech Stack](#️-technology-stack) • [🏗️ Architecture](#️-system-architecture--communication-flow) • [🚀 Quickstart](#-getting-started-locally) • [📡 API & WebSockets](#-rest-api-endpoints) • [🚢 Deployment](#-production-deployment-guide)
+[🕹️ Play on Vercel](https://tic-tac-toe-purohitbhagyesh.vercel.app) • [🚀 Play on GitHub Pages](https://purohitbhagyesh.github.io/tic-tac-toe/) • [✨ Key Features](#-key-features) • [📸 UI Gallery](#-screenshots--ui-gallery) • [🛠️ Tech Stack](#️-technology-stack) • [🏗️ Architecture](#️-system-architecture--communication-flow) • [🚀 Quickstart](#-getting-started-locally) • [📡 API & WebSockets](#-rest-api-endpoints) • [🚢 Deployment](#-production-deployment-guide)
 
 </div>
 
@@ -35,7 +36,8 @@ The application is deployed across global edge infrastructure for low-latency pe
 
 | Service | Platform | Endpoint / URL | Status |
 | :--- | :--- | :--- | :--- |
-| **Frontend Web App** | **Vercel Edge** | [https://tic-tac-toe-purohitbhagyesh.vercel.app](https://tic-tac-toe-purohitbhagyesh.vercel.app) | ![Vercel](https://img.shields.io/badge/Deployed-0070F3?style=flat-square&logo=vercel&logoColor=white) |
+| **Frontend Web App (Primary)** | **Vercel Edge** | [https://tic-tac-toe-purohitbhagyesh.vercel.app](https://tic-tac-toe-purohitbhagyesh.vercel.app) | ![Vercel](https://img.shields.io/badge/Deployed-0070F3?style=flat-square&logo=vercel&logoColor=white) |
+| **Frontend Web App (Mirror)** | **GitHub Pages** | [https://purohitbhagyesh.github.io/tic-tac-toe/](https://purohitbhagyesh.github.io/tic-tac-toe/) | ![GitHub Pages](https://img.shields.io/badge/Deployed-22C55E?style=flat-square&logo=githubpages&logoColor=white) |
 | **Real-Time Backend** | **Render Cloud** | [https://tic-tac-toe-xcsr.onrender.com](https://tic-tac-toe-xcsr.onrender.com/api/health) | ![Render](https://img.shields.io/badge/Active-00C7B7?style=flat-square&logo=render&logoColor=white) |
 | **Relational Database** | **Supabase (PostgreSQL)** | Managed Cloud PostgreSQL Cluster | ![Supabase](https://img.shields.io/badge/Connected-3ECF8E?style=flat-square&logo=supabase&logoColor=white) |
 
@@ -533,6 +535,12 @@ CREATE TABLE IF NOT EXISTS rounds (
 4. Click **Deploy**!
 5. Your live app is live at: **[https://tic-tac-toe-purohitbhagyesh.vercel.app](https://tic-tac-toe-purohitbhagyesh.vercel.app)**
 
+### 4. Frontend Deployment (GitHub Pages)
+1. In your repository, navigate to **Settings** → **Pages**.
+2. Under **Build and deployment** → **Source**, select **GitHub Actions**.
+3. Push to `main` branch or trigger **Deploy to GitHub Pages** in the **Actions** tab.
+4. Your live app is live at: **[https://purohitbhagyesh.github.io/tic-tac-toe/](https://purohitbhagyesh.github.io/tic-tac-toe/)**
+
 ---
 
 ## 👨‍💻 Developer & Author
@@ -542,7 +550,8 @@ CREATE TABLE IF NOT EXISTS rounds (
 **Bhagyesh Purohit**
 
 [![GitHub](https://img.shields.io/badge/GitHub-Profile-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/PurohitBhagyesh)
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-Play%20Now-0070F3?style=for-the-badge&logo=vercel&logoColor=white)](https://tic-tac-toe-purohitbhagyesh.vercel.app)
+[![Vercel App](https://img.shields.io/badge/Live%20Demo-Vercel-0070F3?style=for-the-badge&logo=vercel&logoColor=white)](https://tic-tac-toe-purohitbhagyesh.vercel.app)
+[![GitHub Pages](https://img.shields.io/badge/Live%20Demo-GitHub%20Pages-22C55E?style=for-the-badge&logo=githubpages&logoColor=white)](https://purohitbhagyesh.github.io/tic-tac-toe/)
 
 *Crafted with passion for interactive web engineering, competitive real-time algorithms, and modern iOS aesthetics.*
 
