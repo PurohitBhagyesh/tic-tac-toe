@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import confetti from 'canvas-confetti';
-import { Bot, RotateCcw, Home as HomeIcon, Check, Timer, Clock, Edit2, X, Sparkles, Trophy } from 'lucide-react';
+import { Bot, RotateCcw, Home as HomeIcon, Check, Timer, Clock, Edit2, X, Trophy } from 'lucide-react';
 import Header from '../components/Header';
 import GameBoard from '../components/GameBoard';
 import PlayerCard from '../components/PlayerCard';
@@ -858,4 +858,3 @@ const SinglePlayer = () => {
 };
 
 export default SinglePlayer;
-
