@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import confetti from 'canvas-confetti';
-import { Bot, User, RotateCcw, Home as HomeIcon, Check } from 'lucide-react';
+import { Bot, RotateCcw, Home as HomeIcon, Check, Sparkles } from 'lucide-react';
 import Header from '../components/Header';
 import GameBoard from '../components/GameBoard';
 import PlayerCard from '../components/PlayerCard';
@@ -19,24 +19,25 @@ import {
   getStoredDifficulty,
   setStoredDifficulty,
 } from '../utils/storage';
+import { playSound } from '../utils/sound';
 
 const SinglePlayer = () => {
   const navigate = useNavigate();
 
   // Setup state
   const [isConfigured, setIsConfigured] = useState(false);
-  const [playerName, setPlayerName] = useState(getStoredPlayerName() || 'Player 1');
+  const [playerName, setPlayerName] = useState(getStoredPlayerName() || 'Bhagyesh');
   const [difficulty, setDifficulty] = useState(getStoredDifficulty() || 'medium');
 
   // Game state
   const [board, setBoard] = useState(resetBoard());
   const [currentTurn, setCurrentTurn] = useState('X'); // Player = X, AI = O
   const [isAiThinking, setIsAiThinking] = useState(false);
-  const [winnerInfo, setWinnerInfo] = useState(null); // { winner: 'X'|'O', winningLine: [...] }
+  const [winnerInfo, setWinnerInfo] = useState(null);
   const [isDraw, setIsDraw] = useState(false);
   const [scores, setScores] = useState({ human: 0, ai: 0, draws: 0 });
 
-  // Handle game finish button in setup
+  // Finish setup
   const handleFinishSetup = (e) => {
     if (e) e.preventDefault();
     const finalName = playerName.trim() || 'Player 1';
@@ -44,9 +45,10 @@ const SinglePlayer = () => {
     setStoredPlayerName(finalName);
     setStoredDifficulty(difficulty);
     setIsConfigured(true);
+    playSound('pop');
   };
 
-  // Human player move handler
+  // Human player move
   const handleCellClick = (index) => {
     if (winnerInfo || isDraw || currentTurn !== 'X' || isAiThinking || board[index] !== null) {
       return;
@@ -55,12 +57,13 @@ const SinglePlayer = () => {
     const newBoard = [...board];
     newBoard[index] = 'X';
     setBoard(newBoard);
+    playSound('move_x');
 
-    // Check outcome
     const win = checkWinner(newBoard);
     if (win) {
       setWinnerInfo(win);
       setScores(prev => ({ ...prev, human: prev.human + 1 }));
+      playSound('win');
       confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
       return;
     }
@@ -68,14 +71,14 @@ const SinglePlayer = () => {
     if (checkDraw(newBoard)) {
       setIsDraw(true);
       setScores(prev => ({ ...prev, draws: prev.draws + 1 }));
+      playSound('draw');
       return;
     }
 
-    // Pass turn to AI
     setCurrentTurn('O');
   };
 
-  // AI Turn handler with realistic short delay
+  // AI Turn handler with smooth realistic delay
   useEffect(() => {
     if (!isConfigured || currentTurn !== 'O' || winnerInfo || isDraw) return;
 
@@ -87,6 +90,7 @@ const SinglePlayer = () => {
         const newBoard = [...board];
         newBoard[aiMoveIndex] = 'O';
         setBoard(newBoard);
+        playSound('move_o');
 
         const win = checkWinner(newBoard);
         if (win) {
@@ -95,18 +99,20 @@ const SinglePlayer = () => {
         } else if (checkDraw(newBoard)) {
           setIsDraw(true);
           setScores(prev => ({ ...prev, draws: prev.draws + 1 }));
+          playSound('draw');
         } else {
           setCurrentTurn('X');
         }
       }
       setIsAiThinking(false);
-    }, 450);
+    }, 420);
 
     return () => clearTimeout(timer);
   }, [currentTurn, isConfigured, board, difficulty, winnerInfo, isDraw]);
 
   // Rematch
   const handleRematch = () => {
+    playSound('pop');
     setBoard(resetBoard());
     setWinnerInfo(null);
     setIsDraw(false);
@@ -121,30 +127,31 @@ const SinglePlayer = () => {
       <main className="main-content">
         {!isConfigured ? (
           /* Setup View */
-          <div className="glass-card" style={{ width: '100%', maxWidth: '440px', padding: '2rem' }}>
+          <div className="glass-card" style={{ width: '100%', maxWidth: '440px', padding: '2.25rem 2rem' }}>
             <div style={{ textAlign: 'center', marginBottom: '1.75rem' }}>
               <div style={{
-                width: '56px',
-                height: '56px',
-                borderRadius: '16px',
-                background: 'rgba(0, 240, 255, 0.1)',
+                width: '60px',
+                height: '60px',
+                borderRadius: '18px',
+                background: 'rgba(0, 240, 255, 0.12)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 margin: '0 auto 1rem',
-                border: '1px solid rgba(0, 240, 255, 0.3)'
+                border: '1.5px solid rgba(0, 240, 255, 0.35)',
+                boxShadow: '0 0 20px rgba(0, 240, 255, 0.2)'
               }}>
-                <Bot size={28} color="#00f0ff" />
+                <Bot size={30} color="#00f0ff" />
               </div>
-              <h2 style={{ fontSize: '1.5rem', fontWeight: '800', color: '#f8fafc' }}>
+              <h2 style={{ fontSize: '1.6rem', fontWeight: '900', color: '#f8fafc' }}>
                 Singleplayer Setup
               </h2>
-              <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginTop: '0.25rem' }}>
-                Choose your name and AI difficulty
+              <p style={{ color: '#94a3b8', fontSize: '0.92rem', marginTop: '0.25rem' }}>
+                Set your name and select difficulty level
               </p>
             </div>
 
-            <form onSubmit={handleFinishSetup} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            <form onSubmit={handleFinishSetup} style={{ display: 'flex', flexDirection: 'column', gap: '1.35rem' }}>
               <div className="input-group">
                 <label className="input-label" htmlFor="player-name">Player Name</label>
                 <input
@@ -160,28 +167,32 @@ const SinglePlayer = () => {
 
               <div className="input-group">
                 <label className="input-label">Difficulty</label>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.6rem' }}>
                   {['Easy', 'Medium', 'Hard'].map((lvl) => {
                     const isSelected = difficulty.toLowerCase() === lvl.toLowerCase();
                     return (
                       <button
                         key={lvl}
                         type="button"
-                        onClick={() => setDifficulty(lvl.toLowerCase())}
+                        onClick={() => {
+                          playSound('click');
+                          setDifficulty(lvl.toLowerCase());
+                        }}
                         style={{
-                          padding: '0.75rem 0.5rem',
-                          borderRadius: '12px',
+                          padding: '0.85rem 0.5rem',
+                          borderRadius: '14px',
                           border: isSelected ? '1.5px solid #00f0ff' : '1px solid var(--border-glass)',
-                          background: isSelected ? 'rgba(0, 240, 255, 0.12)' : 'rgba(255, 255, 255, 0.04)',
+                          background: isSelected ? 'rgba(0, 240, 255, 0.15)' : 'rgba(255, 255, 255, 0.04)',
                           color: isSelected ? '#00f0ff' : '#94a3b8',
-                          fontWeight: '700',
-                          fontSize: '0.9rem',
+                          fontWeight: '800',
+                          fontSize: '0.95rem',
                           cursor: 'pointer',
                           transition: 'all 0.2s ease',
                           display: 'flex',
                           flexDirection: 'column',
                           alignItems: 'center',
-                          gap: '0.2rem'
+                          gap: '0.25rem',
+                          boxShadow: isSelected ? '0 0 15px rgba(0, 240, 255, 0.25)' : 'none'
                         }}
                       >
                         {lvl}
@@ -194,7 +205,7 @@ const SinglePlayer = () => {
 
               <div style={{ marginTop: '0.75rem' }}>
                 <Button type="submit" variant="primary" size="lg" className="btn-block">
-                  Finish
+                  Finish & Play
                 </Button>
               </div>
             </form>
@@ -213,7 +224,7 @@ const SinglePlayer = () => {
               />
 
               <div className="match-vs-divider">
-                <span style={{ fontSize: '0.75rem', fontWeight: '800', color: '#64748b' }}>VS</span>
+                <span style={{ fontSize: '0.75rem', fontWeight: '900', color: '#64748b' }}>VS</span>
                 <span className="round-pill" style={{ textTransform: 'capitalize' }}>
                   {difficulty} AI
                 </span>
@@ -237,12 +248,12 @@ const SinglePlayer = () => {
             ) : (
               <div style={{ margin: '0.5rem 0', textAlign: 'center' }}>
                 {winnerInfo?.winner === 'X' && (
-                  <h3 style={{ fontSize: '1.4rem', fontWeight: '900', color: '#00f0ff', textShadow: '0 0 15px rgba(0,240,255,0.5)' }}>
+                  <h3 style={{ fontSize: '1.4rem', fontWeight: '900', color: '#00f0ff', textShadow: '0 0 20px rgba(0,240,255,0.6)' }}>
                     🎉 You are the Winner!
                   </h3>
                 )}
                 {winnerInfo?.winner === 'O' && (
-                  <h3 style={{ fontSize: '1.4rem', fontWeight: '900', color: '#ff0055', textShadow: '0 0 15px rgba(255,0,85,0.5)' }}>
+                  <h3 style={{ fontSize: '1.4rem', fontWeight: '900', color: '#ff007a', textShadow: '0 0 20px rgba(255,0,122,0.6)' }}>
                     💀 You Lose!
                   </h3>
                 )}
@@ -263,7 +274,7 @@ const SinglePlayer = () => {
             />
 
             {/* Action Buttons */}
-            <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem', width: '100%', maxWidth: '380px' }}>
+            <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.75rem', width: '100%', maxWidth: '380px' }}>
               <Button
                 variant="primary"
                 size="md"
@@ -277,7 +288,10 @@ const SinglePlayer = () => {
                 variant="secondary"
                 size="md"
                 className="btn-block"
-                onClick={() => navigate('/')}
+                onClick={() => {
+                  playSound('click');
+                  navigate('/');
+                }}
                 icon={HomeIcon}
               >
                 Back to Home

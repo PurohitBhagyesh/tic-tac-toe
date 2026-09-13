@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import confetti from 'canvas-confetti';
-import { Flag, Play, RotateCcw, Loader2 } from 'lucide-react';
+import { Flag, Play, Loader2 } from 'lucide-react';
 import Header from '../components/Header';
 import GameBoard from '../components/GameBoard';
 import PlayerCard from '../components/PlayerCard';
@@ -11,6 +11,7 @@ import ConfirmModal from '../components/ConfirmModal';
 import { api } from '../services/api';
 import { socketService, connectSocket } from '../services/socket';
 import { getStoredPlayerId } from '../utils/storage';
+import { playSound } from '../utils/sound';
 
 const Game = () => {
   const { roomCode } = useParams();
@@ -60,9 +61,14 @@ const Game = () => {
   // Socket.IO real-time game events
   useEffect(() => {
     // 1. Move updates
-    const cleanupUpdate = socketService.onGameUpdate(({ room: updatedRoom, message }) => {
+    const cleanupUpdate = socketService.onGameUpdate(({ room: updatedRoom, lastMove }) => {
       setRoom(updatedRoom);
       setIsTransitioningRound(false);
+
+      if (lastMove) {
+        const isHost = lastMove.playerId === updatedRoom.players?.[0]?.id;
+        playSound(isHost ? 'move_x' : 'move_o');
+      }
     });
 
     // 2. Round ended
@@ -71,14 +77,18 @@ const Game = () => {
       setRoundNotification(message);
 
       if (roundWinner === currentUser?.symbol) {
-        confetti({ particleCount: 70, spread: 60, origin: { y: 0.7 } });
+        playSound('win');
+        confetti({ particleCount: 80, spread: 70, origin: { y: 0.7 } });
+      } else if (roundWinner === 'draw') {
+        playSound('draw');
+      } else {
+        playSound('draw');
       }
     });
 
     // 3. Match ended (after 5 rounds or give up)
     const cleanupMatchEnd = socketService.onMatchEnd(({ room: updatedRoom }) => {
       setRoom(updatedRoom);
-      // Navigate to results screen
       navigate(`/result/${roomCode}`, {
         state: { room: updatedRoom, player: currentUser }
       });
@@ -93,7 +103,7 @@ const Game = () => {
     });
 
     // 5. Opponent temporary disconnected
-    const cleanupPlayerDisconnected = socketService.onPlayerDisconnected(({ message }) => {
+    const cleanupPlayerDisconnected = socketService.onPlayerDisconnected(() => {
       setOpponentDisconnected(true);
     });
 
@@ -124,6 +134,7 @@ const Game = () => {
 
   // Trigger Next Round
   const handleNextRound = () => {
+    playSound('pop');
     setIsTransitioningRound(true);
     setRoundNotification(null);
     socketService.sendNextRound(roomCode);
@@ -131,6 +142,7 @@ const Game = () => {
 
   // Give up
   const handleGiveUpConfirm = () => {
+    playSound('draw');
     setShowGiveUpModal(false);
     if (roomCode && currentUser?.id) {
       socketService.sendGiveUp(roomCode, currentUser.id);
@@ -139,6 +151,7 @@ const Game = () => {
 
   // Leave room
   const handleLeaveConfirm = async () => {
+    playSound('click');
     setShowLeaveModal(false);
     if (roomCode && currentUser?.id) {
       socketService.leaveRoom(roomCode, currentUser.id);
@@ -155,8 +168,8 @@ const Game = () => {
         <Header showBack backTo="/multiplayer" />
         <main className="main-content">
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', color: '#94a3b8' }}>
-            <Loader2 size={32} style={{ animation: 'spin 1s linear infinite' }} />
-            <span>Connecting to game session...</span>
+            <Loader2 size={36} style={{ animation: 'spin 1s linear infinite', color: '#00f0ff' }} />
+            <span style={{ fontWeight: '700' }}>Connecting to arena...</span>
           </div>
         </main>
       </div>
@@ -181,7 +194,7 @@ const Game = () => {
           <div className="players-match-bar">
             {player1 && (
               <PlayerCard
-                name={player1.name}
+                name={player1.name || 'Player 1'}
                 symbol="X"
                 score={match.scores.X}
                 isActiveTurn={match.currentTurn === 'X' && match.status === 'in_progress'}
@@ -194,14 +207,14 @@ const Game = () => {
               <span className="round-pill">
                 Round {match.currentRound} of {match.maxRounds}
               </span>
-              <span style={{ fontSize: '0.75rem', fontWeight: '800', color: '#64748b', marginTop: '2px' }}>
+              <span style={{ fontSize: '0.8rem', fontWeight: '900', color: '#64748b', marginTop: '2px' }}>
                 VS
               </span>
             </div>
 
             {player2 && (
               <PlayerCard
-                name={player2.name}
+                name={player2.name || 'Player 2'}
                 symbol="O"
                 score={match.scores.O}
                 isActiveTurn={match.currentTurn === 'O' && match.status === 'in_progress'}
@@ -221,16 +234,17 @@ const Game = () => {
           ) : (
             <div style={{
               margin: '0.5rem 0',
-              padding: '0.5rem 1.25rem',
-              background: 'rgba(99, 102, 241, 0.15)',
-              border: '1px solid rgba(99, 102, 241, 0.4)',
-              borderRadius: '20px',
-              textAlign: 'center'
+              padding: '0.6rem 1.4rem',
+              background: 'rgba(139, 92, 246, 0.18)',
+              border: '1.5px solid rgba(139, 92, 246, 0.5)',
+              borderRadius: '24px',
+              textAlign: 'center',
+              boxShadow: '0 0 20px rgba(139, 92, 246, 0.3)'
             }}>
-              <span style={{ fontSize: '1rem', fontWeight: '800', color: '#a5b4fc' }}>
+              <span style={{ fontSize: '1.05rem', fontWeight: '900', color: '#c084fc' }}>
                 {match.roundWinner === 'draw'
                   ? '🤝 Round Draw!'
-                  : `🎉 ${match.roundWinner === 'X' ? player1?.name : player2?.name} won Round ${match.currentRound}!`}
+                  : `🎉 ${match.roundWinner === 'X' ? (player1?.name || 'Player 1') : (player2?.name || 'Player 2')} won Round ${match.currentRound}!`}
               </span>
             </div>
           )}
@@ -261,7 +275,10 @@ const Game = () => {
                 variant="danger"
                 size="md"
                 className="btn-block"
-                onClick={() => setShowGiveUpModal(true)}
+                onClick={() => {
+                  playSound('click');
+                  setShowGiveUpModal(true);
+                }}
                 icon={Flag}
               >
                 Give Up

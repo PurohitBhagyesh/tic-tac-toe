@@ -7,6 +7,7 @@ import QRScannerModal from '../components/QRScannerModal';
 import { api } from '../services/api';
 import { socketService, connectSocket } from '../services/socket';
 import { getStoredPlayerName, setStoredPlayerName, setStoredPlayerId } from '../utils/storage';
+import { playSound } from '../utils/sound';
 
 const JoinRoom = () => {
   const navigate = useNavigate();
@@ -18,7 +19,7 @@ const JoinRoom = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
-  // Synchronize parameter if passed via URL (e.g. /join/482731)
+  // Synchronize parameter if passed via URL
   useEffect(() => {
     if (paramCode && paramCode.length === 6) {
       setRoomCode(paramCode);
@@ -38,11 +39,13 @@ const JoinRoom = () => {
     const finalName = playerName.trim() || 'Player 2';
     setStoredPlayerName(finalName);
     setIsLoading(true);
+    playSound('click');
 
     try {
       const result = await api.joinRoom(cleanCode, finalName);
       if (result.success) {
         setStoredPlayerId(result.player.id);
+        playSound('win');
 
         // Initialize Socket.IO connection and join room
         connectSocket();
@@ -64,6 +67,7 @@ const JoinRoom = () => {
   };
 
   const handleScanSuccess = (scannedCode) => {
+    playSound('pop');
     setRoomCode(scannedCode);
     setErrorMessage('');
   };
@@ -73,26 +77,27 @@ const JoinRoom = () => {
       <Header showBack backTo="/multiplayer" />
 
       <main className="main-content">
-        <div className="glass-card" style={{ width: '100%', maxWidth: '440px', padding: '2rem' }}>
+        <div className="glass-card" style={{ width: '100%', maxWidth: '440px', padding: '2.25rem 2rem' }}>
           <div style={{ textAlign: 'center', marginBottom: '1.75rem' }}>
             <div style={{
-              width: '56px',
-              height: '56px',
-              borderRadius: '16px',
-              background: 'rgba(99, 102, 241, 0.1)',
+              width: '60px',
+              height: '60px',
+              borderRadius: '18px',
+              background: 'rgba(255, 0, 122, 0.12)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               margin: '0 auto 1rem',
-              border: '1px solid rgba(99, 102, 241, 0.3)'
+              border: '1.5px solid rgba(255, 0, 122, 0.4)',
+              boxShadow: '0 0 20px rgba(255, 0, 122, 0.25)'
             }}>
-              <LogIn size={28} color="#818cf8" />
+              <LogIn size={30} color="#ff007a" />
             </div>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: '800', color: '#f8fafc' }}>
+            <h2 style={{ fontSize: '1.6rem', fontWeight: '900', color: '#f8fafc' }}>
               Join Game Room
             </h2>
-            <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginTop: '0.25rem' }}>
-              Enter the 6-digit code or scan the host’s QR code
+            <p style={{ color: '#94a3b8', fontSize: '0.92rem', marginTop: '0.25rem' }}>
+              Enter 6-digit code or scan host’s QR code
             </p>
           </div>
 
@@ -100,43 +105,46 @@ const JoinRoom = () => {
             <div style={{
               padding: '0.75rem 1rem',
               background: 'rgba(255, 0, 85, 0.15)',
-              border: '1px solid rgba(255, 0, 85, 0.3)',
-              borderRadius: '10px',
+              border: '1px solid rgba(255, 0, 85, 0.35)',
+              borderRadius: '12px',
               color: '#ff4d79',
-              fontSize: '0.85rem',
+              fontSize: '0.88rem',
               marginBottom: '1.25rem',
               display: 'flex',
               alignItems: 'center',
               gap: '0.5rem'
             }}>
-              <AlertCircle size={16} />
+              <AlertCircle size={18} />
               <span>{errorMessage}</span>
             </div>
           )}
 
-          <form onSubmit={handleJoin} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          <form onSubmit={handleJoin} style={{ display: 'flex', flexDirection: 'column', gap: '1.35rem' }}>
             {/* Room Code Input + QR Scanner Button */}
             <div className="input-group">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <label className="input-label" htmlFor="join-code">6-Digit Room Code</label>
                 <button
                   type="button"
-                  onClick={() => setIsScannerOpen(true)}
+                  onClick={() => {
+                    playSound('click');
+                    setIsScannerOpen(true);
+                  }}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '0.3rem',
+                    gap: '0.35rem',
                     background: 'none',
                     border: 'none',
                     color: '#00f0ff',
-                    fontSize: '0.8rem',
-                    fontWeight: '700',
+                    fontSize: '0.82rem',
+                    fontWeight: '800',
                     cursor: 'pointer',
-                    padding: '2px 6px',
-                    borderRadius: '4px'
+                    padding: '2px 8px',
+                    borderRadius: '6px'
                   }}
                 >
-                  <Camera size={14} /> Scan QR
+                  <Camera size={15} /> Scan QR
                 </button>
               </div>
 
@@ -149,9 +157,11 @@ const JoinRoom = () => {
                 maxLength={6}
                 style={{
                   fontFamily: 'var(--font-mono)',
-                  fontSize: '1.25rem',
-                  letterSpacing: '0.15em',
-                  textAlign: 'center'
+                  fontSize: '1.35rem',
+                  letterSpacing: '0.18em',
+                  textAlign: 'center',
+                  fontWeight: '800',
+                  color: '#00f0ff'
                 }}
                 onChange={(e) => setRoomCode(e.target.value.replace(/\D/g, ''))}
                 autoFocus={!paramCode}
@@ -179,7 +189,7 @@ const JoinRoom = () => {
               className="btn-block"
               disabled={isLoading || roomCode.length !== 6}
             >
-              {isLoading ? <Loader2 size={20} style={{ animation: 'spin 1s linear infinite' }} /> : 'Join Room'}
+              {isLoading ? <Loader2 size={20} style={{ animation: 'spin 1s linear infinite' }} /> : 'Join Game'}
             </Button>
           </form>
         </div>

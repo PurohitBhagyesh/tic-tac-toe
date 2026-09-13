@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckCircle2, Clock, WifiOff } from 'lucide-react';
+import { CheckCircle2, Clock, WifiOff, User } from 'lucide-react';
 
 const PlayerCard = ({
   name = 'Player',
@@ -13,17 +13,37 @@ const PlayerCard = ({
 }) => {
   const isX = symbol === 'X';
   const activeTurnClass = isActiveTurn ? (isX ? 'active-turn-x' : 'active-turn-o') : '';
+  const displayName = name && name.trim() ? name.trim() : (isX ? 'Player 1' : 'Player 2');
 
   return (
     <div className={`player-card ${activeTurnClass}`}>
+      {/* Symbol Badge */}
       <div className={`player-avatar-badge ${isX ? 'badge-x' : 'badge-o'}`}>
         {symbol}
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
-        <span className="player-card-name" title={name}>
-          {name} {isUser && <span style={{ color: '#6366f1', fontSize: '0.75rem' }}>(You)</span>}
-        </span>
+      {/* Name and Tags */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px', width: '100%' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', maxWidth: '100%', justifyContent: 'center' }}>
+          <span className="player-card-name" title={displayName}>
+            {displayName}
+          </span>
+        </div>
+
+        {isUser && (
+          <span style={{
+            padding: '1px 7px',
+            borderRadius: '10px',
+            fontSize: '0.68rem',
+            fontWeight: '800',
+            background: 'rgba(139, 92, 246, 0.2)',
+            color: '#c084fc',
+            border: '1px solid rgba(139, 92, 246, 0.4)',
+            letterSpacing: '0.03em'
+          }}>
+            YOU
+          </span>
+        )}
 
         {!isConnected && (
           <span style={{ display: 'flex', alignItems: 'center', gap: '3px', color: '#ff4d79', fontSize: '0.7rem' }}>
@@ -32,41 +52,44 @@ const PlayerCard = ({
         )}
       </div>
 
-      <div className="player-score-badge">
+      {/* Live Score Counter */}
+      <div className="player-score-badge" style={{ color: isX ? '#00f0ff' : '#ff007a' }}>
         {score}
       </div>
 
+      {/* Ready Badge */}
       {showReady && (
-        <div style={{ marginTop: '4px' }}>
+        <div style={{ marginTop: '2px' }}>
           {isReady ? (
             <span style={{
               display: 'inline-flex',
               alignItems: 'center',
               gap: '4px',
-              padding: '2px 8px',
+              padding: '2px 9px',
               borderRadius: '12px',
               fontSize: '0.72rem',
-              fontWeight: '700',
+              fontWeight: '800',
               background: 'rgba(34, 197, 94, 0.15)',
               color: '#4ade80',
-              border: '1px solid rgba(34, 197, 94, 0.3)'
+              border: '1px solid rgba(34, 197, 94, 0.35)',
+              boxShadow: '0 0 10px rgba(34, 197, 94, 0.2)'
             }}>
-              <CheckCircle2 size={12} /> Ready
+              <CheckCircle2 size={12} /> READY
             </span>
           ) : (
             <span style={{
               display: 'inline-flex',
               alignItems: 'center',
               gap: '4px',
-              padding: '2px 8px',
+              padding: '2px 9px',
               borderRadius: '12px',
               fontSize: '0.72rem',
-              fontWeight: '700',
-              background: 'rgba(234, 179, 8, 0.12)',
-              color: '#facc15',
-              border: '1px solid rgba(234, 179, 8, 0.3)'
+              fontWeight: '800',
+              background: 'rgba(245, 158, 11, 0.12)',
+              color: '#fbbf24',
+              border: '1px solid rgba(245, 158, 11, 0.3)'
             }}>
-              <Clock size={12} /> Waiting
+              <Clock size={12} /> WAITING
             </span>
           )}
         </div>
