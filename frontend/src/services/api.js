@@ -1,7 +1,11 @@
 // Helper to get sanitized API URL
 const getApiBaseUrl = () => {
   let url = import.meta.env.VITE_API_URL;
-  if (!url || typeof url !== 'string') {
+  if (!url || typeof url !== 'string' || url.trim() === '') {
+    // In production with reverse proxy / multi-service rewrites, use relative path
+    if (typeof window !== 'undefined' && window.location && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+      return '';
+    }
     return 'http://localhost:5000';
   }
 
@@ -9,7 +13,7 @@ const getApiBaseUrl = () => {
 
   // If user accidentally put database URL (postgresql://) in frontend VITE_API_URL
   if (url.startsWith('postgres://') || url.startsWith('postgresql://')) {
-    console.error('⚠️ [Config Error] VITE_API_URL was set to a PostgreSQL database URL instead of your Render backend URL (https://tic-tac-toe-xcsr.onrender.com).');
+    console.error('⚠️ [Config Error] VITE_API_URL was set to a PostgreSQL database URL instead of your backend URL (https://tic-tac-toe-xcsr.onrender.com).');
     return 'https://tic-tac-toe-xcsr.onrender.com';
   }
 
