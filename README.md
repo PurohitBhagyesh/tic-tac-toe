@@ -9,7 +9,7 @@ A modern, production-ready, full-stack Tic-Tac-Toe web application featuring an 
 Experience the full interactive game live in your browser:
 
 [![GitHub Repo](https://img.shields.io/badge/GitHub-Repository-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/PurohitBhagyesh/tic-tac-toe)
-[![Vercel Deployment](https://img.shields.io/badge/Vercel-Deployed-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://github.com/PurohitBhagyesh/tic-tac-toe)
+[![Vercel Deployment](https://img.shields.io/badge/Vercel-Deployed-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://tic-tac-toe-purohitbhagyesh.vercel.app)
 
 - 🤖 **Singleplayer Mode**: Play against Easy, Medium, or unbeatable Hard Minimax AI with customizable turn timers and instant 1-click Rematch.
 - 👥 **Multiplayer Arena**: Create or join 6-digit rooms with live camera QR scanning and sub-100ms real-time moves.
