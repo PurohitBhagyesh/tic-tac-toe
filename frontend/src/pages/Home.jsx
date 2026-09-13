@@ -185,9 +185,41 @@ const Home = () => {
             </Button>
           </div>
         </div>
+
+        {/* Developer Credit Footer */}
+        <footer style={{
+          marginTop: '2.5rem',
+          textAlign: 'center',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '0.45rem',
+          fontSize: '0.88rem',
+          fontWeight: '700',
+          color: 'var(--text-muted)',
+        }}>
+          <span>Developed with 💙 by</span>
+          <a
+            href="https://github.com/PurohitBhagyesh"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              color: 'var(--color-x)',
+              textDecoration: 'none',
+              fontWeight: '800',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.25rem',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            Bhagyesh Purohit
+          </a>
+        </footer>
       </main>
     </div>
   );
 };
 
 export default Home;
+

@@ -290,5 +290,15 @@ npm run dev
 
 ---
 
+## 👨‍💻 Developer & Author
+
+**Bhagyesh Purohit**
+- **GitHub**: [@PurohitBhagyesh](https://github.com/PurohitBhagyesh)
+- **Repository**: [https://github.com/PurohitBhagyesh/tic-tac-toe](https://github.com/PurohitBhagyesh/tic-tac-toe)
+- **Live Demo**: [https://tictactoegamearena.netlify.app/](https://tictactoegamearena.netlify.app/)
+
+---
+
 ## 📄 License
-MIT License. Built for full-stack gaming demonstrations and competitions.
+MIT License. Built with 💙 by Bhagyesh Purohit for full-stack gaming demonstrations and competitions.
+

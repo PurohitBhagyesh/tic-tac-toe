@@ -389,6 +389,29 @@ const ThreeDotMenu = ({
               <div style={{ padding: '0.85rem', background: 'var(--bg-input)', borderRadius: '12px', border: '1px solid var(--border-glass)' }}>
                 <strong style={{ color: '#f59e0b' }}>4. Rematch:</strong> After all 5 rounds, both players can vote for a Rematch to start a fresh battle.
               </div>
+
+              {/* Developer Attribution */}
+              <div style={{
+                padding: '0.75rem',
+                background: 'rgba(10, 132, 255, 0.08)',
+                borderRadius: '12px',
+                border: '1px solid rgba(10, 132, 255, 0.25)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                fontSize: '0.85rem',
+                fontWeight: '700',
+              }}>
+                <span style={{ color: 'var(--text-secondary)' }}>Developed by:</span>
+                <a
+                  href="https://github.com/PurohitBhagyesh"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: 'var(--color-x)', textDecoration: 'none', fontWeight: '800' }}
+                >
+                  Bhagyesh Purohit ↗
+                </a>
+              </div>
             </div>
 
             <div style={{ marginTop: '1.5rem', textAlign: 'right' }}>
