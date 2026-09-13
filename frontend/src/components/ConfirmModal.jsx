@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { AlertTriangle } from 'lucide-react';
 import Button from './Button';
 
@@ -14,7 +15,7 @@ const ConfirmModal = ({
 }) => {
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <div className="modal-overlay" onClick={onCancel}>
       <div className="modal-card" onClick={(e) => e.stopPropagation()}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
@@ -29,10 +30,10 @@ const ConfirmModal = ({
           }}>
             <AlertTriangle size={24} />
           </div>
-          <h3 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#f8fafc' }}>{title}</h3>
+          <h3 style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--text-primary)' }}>{title}</h3>
         </div>
 
-        <p style={{ color: '#94a3b8', fontSize: '0.95rem', marginBottom: '1.5rem', lineHeight: '1.5' }}>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', marginBottom: '1.5rem', lineHeight: '1.5' }}>
           {message}
         </p>
 
@@ -45,7 +46,8 @@ const ConfirmModal = ({
           </Button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

@@ -605,35 +605,46 @@ body::before {
   text-align: center;
 }
 
-/* Modals */
+/* Modals & Dialogs (Rock-Solid Viewport Centering) */
 .modal-overlay {
   position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-  padding: 1.25rem;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  background: rgba(3, 7, 18, 0.75);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  display: grid;
+  place-items: center;
+  z-index: 99999;
+  padding: clamp(1rem, 3vw, 1.5rem);
+  overflow-y: auto;
+  box-sizing: border-box;
 }
 
 .modal-card {
   width: 100%;
-  max-width: min(92vw, 440px);
+  max-width: min(92vw, 420px);
+  margin: auto;
   background: var(--bg-card);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
   border: 1.5px solid var(--border-glass-bright);
   border-radius: var(--radius-xl);
-  padding: clamp(1.5rem, 4vw, 2.2rem);
+  padding: clamp(1.4rem, 4vw, 2rem);
   box-shadow: var(--shadow-lg);
-  animation: modal-pop 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: modal-pop 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  max-height: calc(100dvh - 2.5rem);
+  overflow-y: auto;
+  position: relative;
 }
 
 @keyframes modal-pop {
-  0% { transform: scale(0.9); opacity: 0; }
+  0% { transform: scale(0.92); opacity: 0; }
   100% { transform: scale(1); opacity: 1; }
 }
 

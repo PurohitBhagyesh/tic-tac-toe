@@ -69,19 +69,20 @@ const Home = () => {
           alignItems: 'center',
           justifyContent: 'space-between',
           gap: '1rem',
-          background: 'rgba(15, 23, 42, 0.55)'
+          background: 'var(--bg-card)'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <div style={{
-              width: '40px',
-              height: '40px',
+              width: '42px',
+              height: '42px',
               borderRadius: '12px',
-              background: 'linear-gradient(135deg, rgba(0, 240, 255, 0.2) 0%, rgba(139, 92, 246, 0.2) 100%)',
-              border: '1px solid rgba(0, 240, 255, 0.4)',
+              background: 'rgba(56, 189, 248, 0.15)',
+              border: '1.5px solid var(--border-glass-bright)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#00f0ff'
+              color: 'var(--color-x)',
+              boxShadow: '0 0 15px var(--color-x-glow)'
             }}>
               <User size={20} />
             </div>
@@ -103,10 +104,10 @@ const Home = () => {
               </form>
             ) : (
               <div>
-                <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  Player Name
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  PLAYER NAME
                 </span>
-                <div style={{ fontSize: '1.05rem', fontWeight: '800', color: '#f8fafc' }}>
+                <div style={{ fontSize: '1.05rem', fontWeight: '800', color: 'var(--text-primary)' }}>
                   {playerName}
                 </div>
               </div>
@@ -117,12 +118,12 @@ const Home = () => {
             <button
               onClick={() => setIsEditingName(true)}
               style={{
-                background: 'rgba(255, 255, 255, 0.06)',
-                border: '1px solid var(--border-glass)',
-                color: '#94a3b8',
-                padding: '0.4rem 0.8rem',
+                background: 'var(--btn-secondary-bg)',
+                border: '1.5px solid var(--border-glass)',
+                color: 'var(--text-secondary)',
+                padding: '0.4rem 0.85rem',
                 borderRadius: '8px',
-                fontSize: '0.8rem',
+                fontSize: '0.82rem',
                 fontWeight: '700',
                 cursor: 'pointer',
                 display: 'flex',
@@ -135,13 +136,14 @@ const Home = () => {
           )}
         </div>
 
-        {/* Game Mode Selection Cards */}
+        {/* Game Mode Selection Cards (Perfect Equal Heights & Symmetrical Baseline) */}
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
           gap: '1.5rem',
           width: '100%',
           maxWidth: '680px',
+          alignItems: 'stretch'
         }}>
           {/* Card 1: Singleplayer */}
           <div className="glass-card" style={{
@@ -150,27 +152,44 @@ const Home = () => {
             flexDirection: 'column',
             alignItems: 'center',
             textAlign: 'center',
-            gap: '1.25rem',
+            justifyContent: 'space-between',
+            height: '100%',
+            minHeight: '340px'
           }}>
             <div style={{
-              width: '68px',
-              height: '68px',
-              borderRadius: '22px',
-              background: 'rgba(0, 240, 255, 0.12)',
-              border: '1.5px solid rgba(0, 240, 255, 0.4)',
               display: 'flex',
+              flexDirection: 'column',
               alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 0 25px rgba(0, 240, 255, 0.25)'
+              width: '100%',
+              flex: 1
             }}>
-              <Bot size={36} color="#00f0ff" />
-            </div>
+              <div style={{
+                width: '68px',
+                height: '68px',
+                borderRadius: '22px',
+                background: 'rgba(56, 189, 248, 0.12)',
+                border: '1.5px solid rgba(56, 189, 248, 0.4)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 0 25px var(--color-x-glow)',
+                marginBottom: '1.25rem'
+              }}>
+                <Bot size={36} color="var(--color-x)" />
+              </div>
 
-            <div>
-              <h2 style={{ fontSize: '1.5rem', fontWeight: '900', color: '#f8fafc', marginBottom: '0.4rem' }}>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: '900', color: 'var(--text-primary)', marginBottom: '0.4rem' }}>
                 Singleplayer
               </h2>
-              <p style={{ color: '#94a3b8', fontSize: '0.95rem', lineHeight: '1.5' }}>
+              <p style={{
+                color: 'var(--text-secondary)',
+                fontSize: '0.95rem',
+                lineHeight: '1.5',
+                minHeight: '3.6rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
                 Play against AI with Easy, Medium, or Unbeatable Hard Minimax mode.
               </p>
             </div>
@@ -181,6 +200,7 @@ const Home = () => {
               className="btn-block"
               onClick={() => handleNavigate('/singleplayer')}
               icon={Play}
+              style={{ marginTop: '1.25rem' }}
             >
               PLAY
             </Button>
@@ -193,27 +213,44 @@ const Home = () => {
             flexDirection: 'column',
             alignItems: 'center',
             textAlign: 'center',
-            gap: '1.25rem',
+            justifyContent: 'space-between',
+            height: '100%',
+            minHeight: '340px'
           }}>
             <div style={{
-              width: '68px',
-              height: '68px',
-              borderRadius: '22px',
-              background: 'rgba(255, 0, 122, 0.12)',
-              border: '1.5px solid rgba(255, 0, 122, 0.4)',
               display: 'flex',
+              flexDirection: 'column',
               alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 0 25px rgba(255, 0, 122, 0.25)'
+              width: '100%',
+              flex: 1
             }}>
-              <Users size={36} color="#ff007a" />
-            </div>
+              <div style={{
+                width: '68px',
+                height: '68px',
+                borderRadius: '22px',
+                background: 'rgba(251, 113, 133, 0.12)',
+                border: '1.5px solid rgba(251, 113, 133, 0.4)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 0 25px var(--color-o-glow)',
+                marginBottom: '1.25rem'
+              }}>
+                <Users size={36} color="var(--color-o)" />
+              </div>
 
-            <div>
-              <h2 style={{ fontSize: '1.5rem', fontWeight: '900', color: '#f8fafc', marginBottom: '0.4rem' }}>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: '900', color: 'var(--text-primary)', marginBottom: '0.4rem' }}>
                 Multiplayer
               </h2>
-              <p style={{ color: '#94a3b8', fontSize: '0.95rem', lineHeight: '1.5' }}>
+              <p style={{
+                color: 'var(--text-secondary)',
+                fontSize: '0.95rem',
+                lineHeight: '1.5',
+                minHeight: '3.6rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
                 Play with a friend in real-time with 6-digit codes and instant camera QR scanner.
               </p>
             </div>
@@ -224,6 +261,7 @@ const Home = () => {
               className="btn-block"
               onClick={() => handleNavigate('/multiplayer')}
               icon={Play}
+              style={{ marginTop: '1.25rem' }}
             >
               PLAY
             </Button>

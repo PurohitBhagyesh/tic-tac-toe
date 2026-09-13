@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Settings, Volume2, VolumeX, Sun, Moon, BookOpen, LogOut, X, Shield, Flag } from 'lucide-react';
 import Button from './Button';
 import { toggleMute, getMuteState, playSound } from '../utils/sound';
@@ -13,6 +14,20 @@ const ThreeDotMenu = ({ onGiveUp, onLeaveRoom, isMultiplayer = false }) => {
   useEffect(() => {
     applyTheme(theme);
   }, [theme]);
+
+  // Handle ESC key to close modal
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setIsOpen(false);
+        setShowRules(false);
+      }
+    };
+    if (isOpen || showRules) {
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, showRules]);
 
   const handleToggleSound = () => {
     const nextMuted = toggleMute();
@@ -42,8 +57,8 @@ const ThreeDotMenu = ({ onGiveUp, onLeaveRoom, isMultiplayer = false }) => {
         <Settings size={20} />
       </button>
 
-      {/* Settings Modal */}
-      {isOpen && (
+      {/* Settings Modal (Portaled to document.body for perfect viewport centering) */}
+      {isOpen && createPortal(
         <div className="modal-overlay" onClick={() => setIsOpen(false)}>
           <div className="modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '400px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
@@ -217,13 +232,14 @@ const ThreeDotMenu = ({ onGiveUp, onLeaveRoom, isMultiplayer = false }) => {
               )}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
-      {/* Rules Modal */}
-      {showRules && (
+      {/* Rules Modal (Portaled to document.body) */}
+      {showRules && createPortal(
         <div className="modal-overlay" onClick={() => setShowRules(false)}>
-          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '440px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
               <h3 style={{ fontSize: '1.3rem', fontWeight: '900', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <BookOpen size={22} color="var(--color-x)" />
@@ -258,7 +274,8 @@ const ThreeDotMenu = ({ onGiveUp, onLeaveRoom, isMultiplayer = false }) => {
               </Button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );

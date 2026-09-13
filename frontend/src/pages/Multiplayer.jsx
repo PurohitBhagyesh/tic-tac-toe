@@ -44,34 +44,53 @@ const Multiplayer = () => {
           gap: '1.5rem',
           width: '100%',
           maxWidth: '650px',
+          alignItems: 'stretch'
         }}>
           {/* Create Room */}
           <div className="glass-card" style={{
-            padding: '2rem 1.75rem',
+            padding: '2.25rem 1.75rem',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             textAlign: 'center',
-            gap: '1.25rem',
+            justifyContent: 'space-between',
+            height: '100%',
+            minHeight: '330px'
           }}>
             <div style={{
-              width: '60px',
-              height: '60px',
-              borderRadius: '18px',
-              background: 'rgba(0, 240, 255, 0.1)',
-              border: '1px solid rgba(0, 240, 255, 0.3)',
               display: 'flex',
+              flexDirection: 'column',
               alignItems: 'center',
-              justifyContent: 'center',
+              width: '100%',
+              flex: 1
             }}>
-              <PlusCircle size={30} color="#00f0ff" />
-            </div>
+              <div style={{
+                width: '68px',
+                height: '68px',
+                borderRadius: '22px',
+                background: 'rgba(56, 189, 248, 0.12)',
+                border: '1.5px solid rgba(56, 189, 248, 0.4)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 0 25px var(--color-x-glow)',
+                marginBottom: '1.25rem'
+              }}>
+                <PlusCircle size={34} color="var(--color-x)" />
+              </div>
 
-            <div>
-              <h2 style={{ fontSize: '1.35rem', fontWeight: '800', color: '#f8fafc', marginBottom: '0.35rem' }}>
+              <h2 style={{ fontSize: '1.45rem', fontWeight: '900', color: 'var(--text-primary)', marginBottom: '0.4rem' }}>
                 Create Room
               </h2>
-              <p style={{ color: '#94a3b8', fontSize: '0.9rem' }}>
+              <p style={{
+                color: 'var(--text-secondary)',
+                fontSize: '0.92rem',
+                lineHeight: '1.5',
+                minHeight: '3.6rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
                 Host a new room, get a 6-digit code, and share the QR code with your friend.
               </p>
             </div>
@@ -81,6 +100,7 @@ const Multiplayer = () => {
               size="lg"
               className="btn-block"
               onClick={() => navigate('/create-room')}
+              style={{ marginTop: '1.25rem' }}
             >
               Create Room
             </Button>
@@ -88,31 +108,49 @@ const Multiplayer = () => {
 
           {/* Join Room */}
           <div className="glass-card" style={{
-            padding: '2rem 1.75rem',
+            padding: '2.25rem 1.75rem',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             textAlign: 'center',
-            gap: '1.25rem',
+            justifyContent: 'space-between',
+            height: '100%',
+            minHeight: '330px'
           }}>
             <div style={{
-              width: '60px',
-              height: '60px',
-              borderRadius: '18px',
-              background: 'rgba(99, 102, 241, 0.1)',
-              border: '1px solid rgba(99, 102, 241, 0.3)',
               display: 'flex',
+              flexDirection: 'column',
               alignItems: 'center',
-              justifyContent: 'center',
+              width: '100%',
+              flex: 1
             }}>
-              <LogIn size={30} color="#818cf8" />
-            </div>
+              <div style={{
+                width: '68px',
+                height: '68px',
+                borderRadius: '22px',
+                background: 'rgba(251, 113, 133, 0.12)',
+                border: '1.5px solid rgba(251, 113, 133, 0.4)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 0 25px var(--color-o-glow)',
+                marginBottom: '1.25rem'
+              }}>
+                <LogIn size={34} color="var(--color-o)" />
+              </div>
 
-            <div>
-              <h2 style={{ fontSize: '1.35rem', fontWeight: '800', color: '#f8fafc', marginBottom: '0.35rem' }}>
+              <h2 style={{ fontSize: '1.45rem', fontWeight: '900', color: 'var(--text-primary)', marginBottom: '0.4rem' }}>
                 Join Room
               </h2>
-              <p style={{ color: '#94a3b8', fontSize: '0.9rem' }}>
+              <p style={{
+                color: 'var(--text-secondary)',
+                fontSize: '0.92rem',
+                lineHeight: '1.5',
+                minHeight: '3.6rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
                 Enter an existing 6-digit code or scan the host’s QR code with your camera.
               </p>
             </div>
@@ -122,6 +160,7 @@ const Multiplayer = () => {
               size="lg"
               className="btn-block"
               onClick={() => navigate('/join')}
+              style={{ marginTop: '1.25rem' }}
             >
               Join Room
             </Button>

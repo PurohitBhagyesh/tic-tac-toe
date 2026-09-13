@@ -133,20 +133,20 @@ const SinglePlayer = () => {
                 width: '60px',
                 height: '60px',
                 borderRadius: '18px',
-                background: 'rgba(0, 240, 255, 0.12)',
+                background: 'rgba(56, 189, 248, 0.12)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 margin: '0 auto 1rem',
-                border: '1.5px solid rgba(0, 240, 255, 0.35)',
-                boxShadow: '0 0 20px rgba(0, 240, 255, 0.2)'
+                border: '1.5px solid rgba(56, 189, 248, 0.4)',
+                boxShadow: '0 0 20px var(--color-x-glow)'
               }}>
-                <Bot size={30} color="#00f0ff" />
+                <Bot size={30} color="var(--color-x)" />
               </div>
-              <h2 style={{ fontSize: '1.6rem', fontWeight: '900', color: '#f8fafc' }}>
+              <h2 style={{ fontSize: '1.6rem', fontWeight: '900', color: 'var(--text-primary)' }}>
                 Singleplayer Setup
               </h2>
-              <p style={{ color: '#94a3b8', fontSize: '0.92rem', marginTop: '0.25rem' }}>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.92rem', marginTop: '0.25rem' }}>
                 Set your name and select difficulty level
               </p>
             </div>
@@ -181,9 +181,9 @@ const SinglePlayer = () => {
                         style={{
                           padding: '0.85rem 0.5rem',
                           borderRadius: '14px',
-                          border: isSelected ? '1.5px solid #00f0ff' : '1px solid var(--border-glass)',
-                          background: isSelected ? 'rgba(0, 240, 255, 0.15)' : 'rgba(255, 255, 255, 0.04)',
-                          color: isSelected ? '#00f0ff' : '#94a3b8',
+                          border: isSelected ? '1.5px solid var(--color-x)' : '1px solid var(--border-glass)',
+                          background: isSelected ? 'rgba(56, 189, 248, 0.15)' : 'var(--bg-input)',
+                          color: isSelected ? 'var(--color-x)' : 'var(--text-secondary)',
                           fontWeight: '800',
                           fontSize: '0.95rem',
                           cursor: 'pointer',
@@ -192,7 +192,7 @@ const SinglePlayer = () => {
                           flexDirection: 'column',
                           alignItems: 'center',
                           gap: '0.25rem',
-                          boxShadow: isSelected ? '0 0 15px rgba(0, 240, 255, 0.25)' : 'none'
+                          boxShadow: isSelected ? '0 0 15px var(--color-x-glow)' : 'none'
                         }}
                       >
                         {lvl}

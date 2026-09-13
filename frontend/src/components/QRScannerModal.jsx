@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Html5Qrcode } from 'html5-qrcode';
 import { Camera, X, AlertCircle, RefreshCw } from 'lucide-react';
 import Button from './Button';
@@ -100,17 +101,17 @@ const QRScannerModal = ({ isOpen, onClose, onScanSuccess }) => {
 
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '380px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-          <h3 style={{ fontSize: '1.2rem', fontWeight: '700', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Camera size={20} color="#00f0ff" />
+          <h3 style={{ fontSize: '1.2rem', fontWeight: '700', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Camera size={20} color="var(--color-x)" />
             Scan Room QR Code
           </h3>
           <button
             onClick={onClose}
-            style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer' }}
+            style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
           >
             <X size={20} />
           </button>
@@ -120,19 +121,19 @@ const QRScannerModal = ({ isOpen, onClose, onScanSuccess }) => {
           position: 'relative',
           width: '100%',
           minHeight: '260px',
-          background: '#0a0e17',
+          background: 'var(--bg-input)',
           borderRadius: '16px',
           overflow: 'hidden',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          border: '1px solid rgba(255,255,255,0.1)'
+          border: '1px solid var(--border-glass)'
         }}>
           <div id="qr-reader-container" style={{ width: '100%' }}></div>
 
           {isStarting && !scannerError && (
-            <div style={{ position: 'absolute', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', color: '#94a3b8' }}>
+            <div style={{ position: 'absolute', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)' }}>
               <RefreshCw size={24} style={{ animation: 'spin 1s linear infinite' }} />
               <span style={{ fontSize: '0.85rem' }}>Starting camera...</span>
             </div>
@@ -152,7 +153,8 @@ const QRScannerModal = ({ isOpen, onClose, onScanSuccess }) => {
           </Button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
