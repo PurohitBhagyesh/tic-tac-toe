@@ -24,6 +24,7 @@ const allowedOrigins = [
   'http://localhost:3000',
   'http://127.0.0.1:5173',
   /\.netlify\.app$/, // Allow Netlify preview and deploy URLs
+  /\.vercel\.app$/,  // Allow all Vercel preview and production URLs
 ];
 
 const corsOptions = {
