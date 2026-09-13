@@ -1,11 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Settings, Volume2, VolumeX, Sun, Moon, BookOpen, LogOut, X, Shield, Flag } from 'lucide-react';
+import { MoreVertical, Volume2, VolumeX, Sun, Moon, BookOpen, LogOut, X, Flag, RotateCcw, SlidersHorizontal } from 'lucide-react';
 import Button from './Button';
 import { toggleMute, getMuteState, playSound } from '../utils/sound';
 import { getStoredTheme, toggleTheme, applyTheme } from '../utils/theme';
 
-const ThreeDotMenu = ({ onGiveUp, onLeaveRoom, isMultiplayer = false }) => {
+const ThreeDotMenu = ({
+  onGiveUp = null,
+  giveUpLabel = 'Give Up Match',
+  onRestart = null,
+  restartLabel = 'Restart Match',
+  onLeaveRoom = null,
+  leaveLabel = 'Exit / Leave Room',
+  isMultiplayer = false,
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const [showRules, setShowRules] = useState(false);
   const [isMuted, setIsMuted] = useState(getMuteState());
@@ -52,29 +60,31 @@ const ThreeDotMenu = ({ onGiveUp, onLeaveRoom, isMultiplayer = false }) => {
         }}
         className="btn-icon"
         style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-        title="Settings & Options"
+        title="Game Options & Settings"
+        aria-label="Game options and settings menu"
       >
-        <Settings size={20} />
+        <MoreVertical size={20} />
       </button>
 
-      {/* Settings Modal (Portaled to document.body for perfect viewport centering) */}
+      {/* Options & Settings Modal (Portaled to document.body for perfect viewport centering) */}
       {isOpen && createPortal(
         <div className="modal-overlay" onClick={() => setIsOpen(false)}>
           <div className="modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '400px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <h3 style={{ fontSize: '1.3rem', fontWeight: '900', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                <Settings size={22} color="var(--color-x)" />
-                Settings & Options
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: '900', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                <SlidersHorizontal size={20} color="var(--color-x)" />
+                Game Options
               </h3>
               <button
                 onClick={() => setIsOpen(false)}
-                style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+                style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                aria-label="Close options"
               >
                 <X size={20} />
               </button>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
               {/* 1. Mute Audio Toggle */}
               <div style={{
                 display: 'flex',
@@ -177,8 +187,35 @@ const ThreeDotMenu = ({ onGiveUp, onLeaveRoom, isMultiplayer = false }) => {
                 <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>➔</span>
               </button>
 
-              {/* Give Up in Multiplayer */}
-              {isMultiplayer && onGiveUp && (
+              {/* 4. Restart Option */}
+              {onRestart && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsOpen(false);
+                    onRestart();
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.6rem',
+                    padding: '0.85rem 1rem',
+                    background: 'rgba(56, 189, 248, 0.1)',
+                    border: '1.5px solid var(--border-glass)',
+                    borderRadius: 'var(--radius-md)',
+                    color: 'var(--color-x)',
+                    fontWeight: '800',
+                    fontSize: '0.95rem',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <RotateCcw size={20} color="var(--color-x)" />
+                  <span>{restartLabel}</span>
+                </button>
+              )}
+
+              {/* 5. Give Up Option */}
+              {onGiveUp && (
                 <button
                   type="button"
                   onClick={() => {
@@ -200,11 +237,11 @@ const ThreeDotMenu = ({ onGiveUp, onLeaveRoom, isMultiplayer = false }) => {
                   }}
                 >
                   <Flag size={20} color="#f43f5e" />
-                  <span>Give Up Match</span>
+                  <span>{giveUpLabel}</span>
                 </button>
               )}
 
-              {/* 4. Exit / Leave Room Button */}
+              {/* 6. Exit / Leave Room Button */}
               {onLeaveRoom && (
                 <button
                   type="button"
@@ -227,7 +264,7 @@ const ThreeDotMenu = ({ onGiveUp, onLeaveRoom, isMultiplayer = false }) => {
                   }}
                 >
                   <LogOut size={20} />
-                  <span>Exit / Leave Room</span>
+                  <span>{leaveLabel}</span>
                 </button>
               )}
             </div>
@@ -247,7 +284,8 @@ const ThreeDotMenu = ({ onGiveUp, onLeaveRoom, isMultiplayer = false }) => {
               </h3>
               <button
                 onClick={() => setShowRules(false)}
-                style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+                style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                aria-label="Close rules"
               >
                 <X size={20} />
               </button>

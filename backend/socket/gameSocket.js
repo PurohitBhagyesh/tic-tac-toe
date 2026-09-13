@@ -135,8 +135,28 @@ export const setupSocketHandlers = (io) => {
             scores: result.room.match.scores,
             message: result.room.match.roundWinner === 'draw'
               ? 'Round Draw!'
-              : `Round ${result.room.match.currentRound} won by ${result.room.match.roundWinner}!`
+              : `Round ${result.room.match.currentRound} won by ${result.room.match.roundWinner}!`,
+            autoNextDelay: 3200
           });
+
+          // Automatically advance to next round after delay (hands-free smooth arcade gameplay)
+          setTimeout(async () => {
+            try {
+              const currentRoom = await roomService.getRoom(roomCode);
+              if (currentRoom?.match?.status === 'round_ended' && currentRoom.match.currentRound < currentRoom.match.maxRounds) {
+                const nextRes = await gameService.nextRound(roomCode);
+                if (nextRes.success) {
+                  console.log(`⚡ [Auto Next Round] Advanced room ${roomCode} to Round ${nextRes.room.match.currentRound}`);
+                  io.to(`room_${roomCode}`).emit('game:update', {
+                    room: nextRes.room,
+                    message: `Starting Round ${nextRes.room.match.currentRound} of 5!`
+                  });
+                }
+              }
+            } catch (err) {
+              console.error('[Auto nextRound error]:', err.message);
+            }
+          }, 3200);
         }
 
         // Broadcast match end after 5 rounds

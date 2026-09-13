@@ -121,9 +121,9 @@ const Result = () => {
 
       <main className="main-content">
         {isLoading ? (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', color: '#94a3b8' }}>
-            <Loader2 size={36} style={{ animation: 'spin 1s linear infinite', color: '#00f0ff' }} />
-            <span style={{ fontWeight: '700' }}>Calculating Final Match Results...</span>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', color: 'var(--text-secondary)' }}>
+            <Loader2 size={36} style={{ animation: 'spin 1s linear infinite', color: 'var(--color-x)' }} />
+            <span style={{ fontWeight: '800' }}>Calculating Final Match Results...</span>
           </div>
         ) : (
           <div className="glass-card" style={{

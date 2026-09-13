@@ -304,6 +304,8 @@ export const giveUpMatch = async (roomCode, playerId) => {
 
   match.status = 'match_ended';
   match.matchWinner = opponent ? opponent.symbol : (forfeitingPlayer.symbol === 'X' ? 'O' : 'X');
+  match.forfeited = true;
+  match.forfeitingPlayerId = playerId;
   room.status = 'finished';
 
   try {

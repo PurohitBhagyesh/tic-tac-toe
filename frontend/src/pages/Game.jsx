@@ -26,6 +26,7 @@ const Game = () => {
   const [opponentDisconnected, setOpponentDisconnected] = useState(false);
   const [isTransitioningRound, setIsTransitioningRound] = useState(false);
   const [timeLeft, setTimeLeft] = useState(120);
+  const [autoRoundCountdown, setAutoRoundCountdown] = useState(null);
 
   const currentUserId = currentUser?.id || getStoredPlayerId();
 
@@ -104,6 +105,7 @@ const Game = () => {
     const cleanupUpdate = socketService.onGameUpdate(({ room: updatedRoom, lastMove }) => {
       setRoom(updatedRoom);
       setIsTransitioningRound(false);
+      setAutoRoundCountdown(null);
 
       if (lastMove) {
         const isHost = lastMove.playerId === updatedRoom.players?.[0]?.id;
@@ -123,6 +125,20 @@ const Game = () => {
         playSound('draw');
       } else {
         playSound('draw');
+      }
+
+      // Start hands-free automatic round advance countdown
+      if (updatedRoom.match && updatedRoom.match.currentRound < updatedRoom.match.maxRounds) {
+        setAutoRoundCountdown(3);
+        const cdInterval = setInterval(() => {
+          setAutoRoundCountdown((prev) => {
+            if (prev === null || prev <= 1) {
+              clearInterval(cdInterval);
+              return null;
+            }
+            return prev - 1;
+          });
+        }, 1000);
       }
     });
 
@@ -207,9 +223,9 @@ const Game = () => {
       <div className="app-container">
         <Header showBack backTo="/multiplayer" />
         <main className="main-content">
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', color: '#94a3b8' }}>
-            <Loader2 size={36} style={{ animation: 'spin 1s linear infinite', color: '#00f0ff' }} />
-            <span style={{ fontWeight: '700' }}>Connecting to arena...</span>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', color: 'var(--text-secondary)' }}>
+            <Loader2 size={36} style={{ animation: 'spin 1s linear infinite', color: 'var(--color-x)' }} />
+            <span style={{ fontWeight: '800' }}>Connecting to arena...</span>
           </div>
         </main>
       </div>
@@ -268,6 +284,25 @@ const Game = () => {
               Scores tied this round
             </span>
           </div>
+
+          {match.currentRound < match.maxRounds && (
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.45rem',
+              marginTop: '0.4rem',
+              padding: '0.35rem 0.85rem',
+              borderRadius: '16px',
+              background: 'rgba(56, 189, 248, 0.14)',
+              border: '1px solid rgba(56, 189, 248, 0.35)',
+              fontSize: '0.84rem',
+              fontWeight: '800',
+              color: 'var(--color-x)',
+            }}>
+              <Timer size={14} />
+              <span>Next round in {autoRoundCountdown !== null ? autoRoundCountdown : 3}s...</span>
+            </div>
+          )}
         </>
       );
     }
@@ -307,6 +342,25 @@ const Game = () => {
               You won this round!
             </span>
           </div>
+
+          {match.currentRound < match.maxRounds && (
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.45rem',
+              marginTop: '0.4rem',
+              padding: '0.35rem 0.85rem',
+              borderRadius: '16px',
+              background: 'rgba(56, 189, 248, 0.14)',
+              border: '1px solid rgba(56, 189, 248, 0.35)',
+              fontSize: '0.84rem',
+              fontWeight: '800',
+              color: 'var(--color-x)',
+            }}>
+              <Timer size={14} />
+              <span>Next round in {autoRoundCountdown !== null ? autoRoundCountdown : 3}s...</span>
+            </div>
+          )}
         </>
       );
     }
@@ -345,6 +399,25 @@ const Game = () => {
             {winnerName} won this round
           </span>
         </div>
+
+        {match.currentRound < match.maxRounds && (
+          <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.45rem',
+            marginTop: '0.4rem',
+            padding: '0.35rem 0.85rem',
+            borderRadius: '16px',
+            background: 'rgba(129, 140, 248, 0.14)',
+            border: '1px solid rgba(129, 140, 248, 0.35)',
+            fontSize: '0.84rem',
+            fontWeight: '800',
+            color: 'var(--color-o)',
+          }}>
+            <Timer size={14} />
+            <span>Next round in {autoRoundCountdown !== null ? autoRoundCountdown : 3}s...</span>
+          </div>
+        )}
       </>
     );
   };
@@ -489,9 +562,9 @@ const Game = () => {
             overlay={getRoundOverlay()}
           />
 
-          {/* Controls Bar */}
-          <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem', width: '100%', maxWidth: '380px' }}>
-            {isRoundEnded && match.currentRound < match.maxRounds ? (
+          {/* Controls Bar - Next Round Button after round ends */}
+          {isRoundEnded && match.currentRound < match.maxRounds && (
+            <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.75rem', width: '100%', maxWidth: '380px' }}>
               <Button
                 variant="primary"
                 size="lg"
@@ -499,24 +572,15 @@ const Game = () => {
                 onClick={handleNextRound}
                 disabled={isTransitioningRound}
                 icon={Play}
+                style={{
+                  boxShadow: '0 0 25px var(--color-x-glow)',
+                  fontSize: '1.15rem'
+                }}
               >
                 {isTransitioningRound ? 'Loading Next Round...' : 'NEXT ROUND'}
               </Button>
-            ) : (
-              <Button
-                variant="danger"
-                size="md"
-                className="btn-block"
-                onClick={() => {
-                  playSound('click');
-                  setShowGiveUpModal(true);
-                }}
-                icon={Flag}
-              >
-                Give Up
-              </Button>
-            )}
-          </div>
+            </div>
+          )}
         </div>
 
         {/* Give Up Confirmation Modal */}

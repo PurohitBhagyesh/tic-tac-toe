@@ -197,13 +197,39 @@ body::before {
 }
 
 /* Typography Helpers & Hero Title */
+.hero-title {
+  font-size: clamp(2.3rem, 6vw, 3.6rem);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  margin-bottom: 0.4rem;
+  line-height: 1.18;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+}
+
+.hero-title-prefix {
+  color: var(--text-primary);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="light"] .hero-title-prefix {
+  color: #0f172a;
+  text-shadow: none;
+}
+
 .title-gradient {
-  background: linear-gradient(135deg, #38bdf8 0%, #60a5fa 50%, #818cf8 100%);
+  background: linear-gradient(135deg, #38bdf8 0%, #60a5fa 45%, #818cf8 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   font-weight: 900;
   letter-spacing: -0.02em;
+  filter: drop-shadow(0 0 16px rgba(56, 189, 248, 0.45));
 }
 
 [data-theme="light"] .title-gradient {
@@ -211,6 +237,7 @@ body::before {
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 8px rgba(2, 132, 199, 0.25));
 }
 
 .title-blue-x {

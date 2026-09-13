@@ -10,7 +10,11 @@ const Header = ({
   title = 'Tic-Tac-Toe',
   showMenu = true,
   onGiveUp = null,
+  giveUpLabel = 'Give Up Match',
+  onRestart = null,
+  restartLabel = 'Restart Match',
   onLeaveRoom = null,
+  leaveLabel = 'Exit / Leave Room',
   isMultiplayer = false,
 }) => {
   const navigate = useNavigate();
@@ -28,6 +32,7 @@ const Header = ({
               className="btn-icon"
               style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               title="Go Back"
+              aria-label="Go Back"
             >
               <ArrowLeft size={18} />
             </button>
@@ -54,7 +59,11 @@ const Header = ({
           {showMenu && (
             <ThreeDotMenu
               onGiveUp={onGiveUp}
+              giveUpLabel={giveUpLabel}
+              onRestart={onRestart}
+              restartLabel={restartLabel}
               onLeaveRoom={onLeaveRoom}
+              leaveLabel={leaveLabel}
               isMultiplayer={isMultiplayer}
             />
           )}

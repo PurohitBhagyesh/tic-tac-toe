@@ -332,7 +332,14 @@ const SinglePlayer = () => {
 
   return (
     <div className="app-container">
-      <Header showBack backTo="/" />
+      <Header
+        showBack
+        backTo={isConfigured ? undefined : '/'}
+        onRestart={isConfigured ? handleRematch : null}
+        restartLabel="Restart Round"
+        onGiveUp={isConfigured && !winnerInfo && !isDraw ? handlePlayerTimeout : null}
+        giveUpLabel="Forfeit / Give Up"
+      />
 
       <main className="main-content">
         {!isConfigured ? (
