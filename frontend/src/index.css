@@ -434,6 +434,60 @@ body::before {
   border: 1.5px solid var(--border-glass);
   border-radius: clamp(18px, 4vw, var(--radius-xl));
   box-shadow: var(--shadow-lg);
+  transition: filter 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.gameboard-grid.board-blurred {
+  filter: blur(8px);
+  opacity: 0.30;
+  pointer-events: none;
+  transform: scale(0.96);
+}
+
+/* Central In-Board Message Overlay */
+.gameboard-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(0.75rem, 2.5vw, 1.25rem);
+  z-index: 25;
+  border-radius: clamp(18px, 4vw, var(--radius-xl));
+  background: rgba(4, 10, 22, 0.60);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: overlay-fade-in 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-theme="light"] .gameboard-overlay {
+  background: rgba(230, 242, 255, 0.70);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.gameboard-overlay-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 0.65rem;
+  padding: clamp(1.2rem, 3.5vw, 1.6rem) clamp(1.2rem, 4vw, 1.85rem);
+  background: var(--bg-card);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border: 1.5px solid var(--border-glass-bright);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg), 0 0 30px var(--color-x-glow);
+  animation: modal-pop 0.28s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  max-width: 92%;
+  width: 100%;
+}
+
+@keyframes overlay-fade-in {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
 }
 
 .game-cell {

@@ -169,10 +169,166 @@ const SinglePlayer = () => {
     setIsAiThinking(false);
   };
 
-  // Timer color and progress calculation
-  const timerPercentage = Math.max(0, Math.min(100, (timeLeft / timerSetting) * 100));
-  const isTimeCritical = timeLeft <= 5 && currentTurn === 'X' && !winnerInfo && !isDraw;
-  const isTimeWarning = timeLeft <= 10 && currentTurn === 'X' && !winnerInfo && !isDraw;
+  // Construct in-board center overlay message card
+  const getBoardOverlay = () => {
+    if (!winnerInfo && !isDraw) return null;
+
+    if (winnerInfo?.timeout) {
+      return (
+        <>
+          <div style={{
+            width: '56px',
+            height: '56px',
+            borderRadius: '50%',
+            background: 'rgba(239, 68, 68, 0.18)',
+            border: '2px solid rgba(239, 68, 68, 0.6)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '1.9rem',
+            boxShadow: '0 0 24px rgba(239, 68, 68, 0.4)',
+          }}>
+            ⏳
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', alignItems: 'center' }}>
+            <span style={{
+              fontSize: 'clamp(1.1rem, 3.8vw, 1.35rem)',
+              fontWeight: '900',
+              color: '#ef4444',
+              textShadow: '0 0 14px rgba(239, 68, 68, 0.45)',
+              letterSpacing: '0.02em',
+            }}>
+              You ran out of time!
+            </span>
+            <span style={{
+              fontSize: 'clamp(0.95rem, 3vw, 1.1rem)',
+              fontWeight: '800',
+              color: 'var(--text-primary)',
+            }}>
+              You lose!
+            </span>
+          </div>
+        </>
+      );
+    }
+
+    if (winnerInfo?.winner === 'X') {
+      return (
+        <>
+          <div style={{
+            width: '56px',
+            height: '56px',
+            borderRadius: '50%',
+            background: 'rgba(56, 189, 248, 0.18)',
+            border: '2px solid var(--color-x)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '1.9rem',
+            boxShadow: '0 0 24px var(--color-x-glow)',
+          }}>
+            🎉
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', alignItems: 'center' }}>
+            <span style={{
+              fontSize: 'clamp(1.2rem, 4vw, 1.45rem)',
+              fontWeight: '900',
+              color: 'var(--color-x)',
+              textShadow: '0 0 16px var(--color-x-glow)',
+              letterSpacing: '0.02em',
+            }}>
+              Victory!
+            </span>
+            <span style={{
+              fontSize: 'clamp(0.9rem, 2.8vw, 1rem)',
+              fontWeight: '700',
+              color: 'var(--text-secondary)',
+            }}>
+              You are the Winner!
+            </span>
+          </div>
+        </>
+      );
+    }
+
+    if (winnerInfo?.winner === 'O') {
+      return (
+        <>
+          <div style={{
+            width: '56px',
+            height: '56px',
+            borderRadius: '50%',
+            background: 'rgba(129, 140, 248, 0.18)',
+            border: '2px solid var(--color-o)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '1.9rem',
+            boxShadow: '0 0 24px var(--color-o-glow)',
+          }}>
+            💀
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', alignItems: 'center' }}>
+            <span style={{
+              fontSize: 'clamp(1.2rem, 4vw, 1.45rem)',
+              fontWeight: '900',
+              color: 'var(--color-o)',
+              textShadow: '0 0 16px var(--color-o-glow)',
+              letterSpacing: '0.02em',
+            }}>
+              Defeat!
+            </span>
+            <span style={{
+              fontSize: 'clamp(0.9rem, 2.8vw, 1rem)',
+              fontWeight: '700',
+              color: 'var(--text-secondary)',
+            }}>
+              AI Bot won this round
+            </span>
+          </div>
+        </>
+      );
+    }
+
+    if (isDraw) {
+      return (
+        <>
+          <div style={{
+            width: '56px',
+            height: '56px',
+            borderRadius: '50%',
+            background: 'rgba(255, 255, 255, 0.1)',
+            border: '2px solid var(--border-glass-bright)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '1.9rem',
+          }}>
+            🤝
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', alignItems: 'center' }}>
+            <span style={{
+              fontSize: 'clamp(1.2rem, 4vw, 1.45rem)',
+              fontWeight: '900',
+              color: 'var(--text-primary)',
+              letterSpacing: '0.02em',
+            }}>
+              Match Draw!
+            </span>
+            <span style={{
+              fontSize: 'clamp(0.9rem, 2.8vw, 1rem)',
+              fontWeight: '700',
+              color: 'var(--text-secondary)',
+            }}>
+              Well played by both sides
+            </span>
+          </div>
+        </>
+      );
+    }
+
+    return null;
+  };
 
   return (
     <div className="app-container">
@@ -416,53 +572,26 @@ const SinglePlayer = () => {
               </div>
             )}
 
-            {/* Turn / Outcome Commentary */}
-            {!winnerInfo && !isDraw ? (
-              <PlayerStatus
-                message={currentTurn === 'X' ? (isTimeCritical ? '⚠️ Hurry up! Time running out!' : 'Your Turn') : 'AI is thinking...'}
-                isThinking={isAiThinking}
-                highlight={currentTurn === 'X' ? (isTimeCritical ? 'o' : 'x') : 'o'}
-              />
-            ) : (
-              <div style={{ margin: '0.5rem 0', textAlign: 'center' }}>
-                {winnerInfo?.winner === 'X' && (
-                  <h3 style={{ fontSize: '1.4rem', fontWeight: '900', color: 'var(--color-x)', textShadow: '0 0 16px var(--color-x-glow)' }}>
-                    🎉 You are the Winner!
-                  </h3>
-                )}
-                {winnerInfo?.winner === 'O' && (
-                  <div style={{
-                    padding: '0.65rem 1.25rem',
-                    borderRadius: '16px',
-                    background: winnerInfo?.timeout ? 'rgba(239, 68, 68, 0.15)' : 'rgba(245, 158, 11, 0.12)',
-                    border: `1.5px solid ${winnerInfo?.timeout ? 'rgba(239, 68, 68, 0.4)' : 'rgba(245, 158, 11, 0.35)'}`,
-                    boxShadow: winnerInfo?.timeout ? '0 0 20px rgba(239, 68, 68, 0.3)' : '0 0 16px var(--color-o-glow)',
-                    display: 'inline-block'
-                  }}>
-                    <h3 style={{
-                      fontSize: '1.3rem',
-                      fontWeight: '900',
-                      color: winnerInfo?.timeout ? '#ef4444' : 'var(--color-o)',
-                      margin: 0,
-                    }}>
-                      {winnerInfo?.timeout ? '⏳ You ran out of time! You lose!' : '💀 You Lose!'}
-                    </h3>
-                  </div>
-                )}
-                {isDraw && (
-                  <h3 style={{ fontSize: '1.4rem', fontWeight: '900', color: 'var(--text-secondary)' }}>
-                    🤝 It’s a Draw!
-                  </h3>
-                )}
-              </div>
-            )}
+            {/* Turn Commentary */}
+            <PlayerStatus
+              message={
+                winnerInfo || isDraw
+                  ? 'Game Finished'
+                  : currentTurn === 'X'
+                  ? (isTimeCritical ? '⚠️ Hurry up! Time running out!' : 'Your Turn')
+                  : 'AI is thinking...'
+              }
+              isThinking={isAiThinking && !winnerInfo && !isDraw}
+              highlight={winnerInfo || isDraw ? 'x' : currentTurn === 'X' ? (isTimeCritical ? 'o' : 'x') : 'o'}
+            />
 
-            {/* 3x3 Board */}
+            {/* 3x3 Board with In-Board Blurred Outcome Overlay */}
             <GameBoard
               board={board}
               onCellClick={handleCellClick}
               disabled={Boolean(winnerInfo || isDraw || currentTurn !== 'X' || isAiThinking)}
               winningLine={winnerInfo?.winningLine}
+              overlay={getBoardOverlay()}
             />
 
             {/* Action Buttons */}

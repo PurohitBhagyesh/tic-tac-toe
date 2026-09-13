@@ -227,6 +227,128 @@ const Game = () => {
   const isTimeWarning = timeLeft <= 30 && !isRoundEnded;
   const activePlayerName = match.currentTurn === 'X' ? (player1?.name || 'Player 1') : (player2?.name || 'Player 2');
 
+  // In-board center overlay message card for round completion
+  const getRoundOverlay = () => {
+    if (!isRoundEnded) return null;
+
+    const isDraw = match.roundWinner === 'draw';
+    const isWinnerMe = match.roundWinner === mySymbol;
+    const winnerName = match.roundWinner === 'X' ? (player1?.name || 'Player 1') : (player2?.name || 'Player 2');
+
+    if (isDraw) {
+      return (
+        <>
+          <div style={{
+            width: '56px',
+            height: '56px',
+            borderRadius: '50%',
+            background: 'rgba(255, 255, 255, 0.1)',
+            border: '2px solid var(--border-glass-bright)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '1.9rem',
+          }}>
+            🤝
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', alignItems: 'center' }}>
+            <span style={{
+              fontSize: 'clamp(1.15rem, 3.8vw, 1.4rem)',
+              fontWeight: '900',
+              color: 'var(--text-primary)',
+              letterSpacing: '0.02em',
+            }}>
+              Round {match.currentRound} Draw!
+            </span>
+            <span style={{
+              fontSize: 'clamp(0.88rem, 2.7vw, 0.98rem)',
+              fontWeight: '700',
+              color: 'var(--text-secondary)',
+            }}>
+              Scores tied this round
+            </span>
+          </div>
+        </>
+      );
+    }
+
+    if (isWinnerMe) {
+      return (
+        <>
+          <div style={{
+            width: '56px',
+            height: '56px',
+            borderRadius: '50%',
+            background: 'rgba(56, 189, 248, 0.18)',
+            border: '2px solid var(--color-x)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '1.9rem',
+            boxShadow: '0 0 24px var(--color-x-glow)',
+          }}>
+            🎉
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', alignItems: 'center' }}>
+            <span style={{
+              fontSize: 'clamp(1.15rem, 3.8vw, 1.4rem)',
+              fontWeight: '900',
+              color: 'var(--color-x)',
+              textShadow: '0 0 16px var(--color-x-glow)',
+              letterSpacing: '0.02em',
+            }}>
+              Round {match.currentRound} Victory!
+            </span>
+            <span style={{
+              fontSize: 'clamp(0.88rem, 2.7vw, 0.98rem)',
+              fontWeight: '700',
+              color: 'var(--text-secondary)',
+            }}>
+              You won this round!
+            </span>
+          </div>
+        </>
+      );
+    }
+
+    return (
+      <>
+        <div style={{
+          width: '56px',
+          height: '56px',
+          borderRadius: '50%',
+          background: 'rgba(129, 140, 248, 0.18)',
+          border: '2px solid var(--color-o)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: '1.9rem',
+          boxShadow: '0 0 24px var(--color-o-glow)',
+        }}>
+          💀
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', alignItems: 'center' }}>
+          <span style={{
+            fontSize: 'clamp(1.15rem, 3.8vw, 1.4rem)',
+            fontWeight: '900',
+            color: 'var(--color-o)',
+            textShadow: '0 0 16px var(--color-o-glow)',
+            letterSpacing: '0.02em',
+          }}>
+            Round {match.currentRound} Defeat!
+          </span>
+          <span style={{
+            fontSize: 'clamp(0.88rem, 2.7vw, 0.98rem)',
+            fontWeight: '700',
+            color: 'var(--text-secondary)',
+          }}>
+            {winnerName} won this round
+          </span>
+        </div>
+      </>
+    );
+  };
+
   return (
     <div className="app-container">
       <Header
@@ -274,29 +396,17 @@ const Game = () => {
           </div>
 
           {/* Turn & Match Commentary */}
-          {!isRoundEnded ? (
-            <PlayerStatus
-              message={isMyTurn ? (isTimeCritical ? '⚠️ Hurry up! 2m Timer Running Out!' : 'Your Turn') : `${activePlayerName}'s Turn`}
-              isThinking={!isMyTurn}
-              highlight={isMyTurn ? (mySymbol === 'X' ? 'x' : 'o') : null}
-            />
-          ) : (
-            <div style={{
-              margin: '0.5rem 0',
-              padding: '0.6rem 1.4rem',
-              background: 'rgba(56, 189, 248, 0.15)',
-              border: '1.5px solid var(--border-glass-bright)',
-              borderRadius: '24px',
-              textAlign: 'center',
-              boxShadow: '0 0 20px var(--color-x-glow)'
-            }}>
-              <span style={{ fontSize: '1.05rem', fontWeight: '900', color: 'var(--color-x)' }}>
-                {match.roundWinner === 'draw'
-                  ? '🤝 Round Draw!'
-                  : `🎉 ${match.roundWinner === 'X' ? (player1?.name || 'Player 1') : (player2?.name || 'Player 2')} won Round ${match.currentRound}!`}
-              </span>
-            </div>
-          )}
+          <PlayerStatus
+            message={
+              isRoundEnded
+                ? `Round ${match.currentRound} Complete`
+                : isMyTurn
+                ? (isTimeCritical ? '⚠️ Hurry up! 2m Timer Running Out!' : 'Your Turn')
+                : `${activePlayerName}'s Turn`
+            }
+            isThinking={!isMyTurn && !isRoundEnded}
+            highlight={isRoundEnded ? 'x' : isMyTurn ? (mySymbol === 'X' ? 'x' : 'o') : null}
+          />
 
           {/* Mandatory 2-Minute Turn Timer Bar & Badge */}
           {!isRoundEnded && (
@@ -370,12 +480,13 @@ const Game = () => {
             </div>
           )}
 
-          {/* 3x3 Interactive Game Board */}
+          {/* 3x3 Interactive Game Board with Blurred In-Board Overlay */}
           <GameBoard
             board={match.board}
             onCellClick={handleCellClick}
             disabled={!isMyTurn || isRoundEnded}
             winningLine={match.winningLine}
+            overlay={getRoundOverlay()}
           />
 
           {/* Controls Bar */}

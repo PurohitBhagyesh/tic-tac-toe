@@ -6,16 +6,19 @@ const GameBoard = ({
   onCellClick,
   disabled = false,
   winningLine = null,
+  overlay = null,
 }) => {
   const handleClick = (index) => {
-    if (disabled || board[index] !== null) return;
+    if (disabled || board[index] !== null || overlay) return;
     playSound('click');
     onCellClick(index);
   };
 
+  const isBlurred = Boolean(overlay);
+
   return (
     <div className="gameboard-container">
-      <div className="gameboard-grid">
+      <div className={`gameboard-grid ${isBlurred ? 'board-blurred' : ''}`}>
         {board.map((cell, index) => {
           const isWinningCell = winningLine && winningLine.includes(index);
           const isOccupied = cell !== null;
@@ -25,7 +28,7 @@ const GameBoard = ({
               key={index}
               className={`game-cell ${isOccupied ? 'occupied' : ''} ${isWinningCell ? 'winning-cell' : ''}`}
               onClick={() => handleClick(index)}
-              disabled={disabled || isOccupied}
+              disabled={disabled || isOccupied || isBlurred}
               aria-label={`Cell ${index + 1}, ${cell ? cell : 'Empty'}`}
             >
               {cell === 'X' && (
@@ -38,6 +41,14 @@ const GameBoard = ({
           );
         })}
       </div>
+
+      {overlay && (
+        <div className="gameboard-overlay">
+          <div className="gameboard-overlay-card">
+            {overlay}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
