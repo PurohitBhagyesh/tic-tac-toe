@@ -198,7 +198,7 @@ const Home = () => {
           fontWeight: '700',
           color: 'var(--text-muted)',
         }}>
-          <span>Developed with 💙 by</span>
+          <span>Developed by</span>
           <a
             href="https://github.com/PurohitBhagyesh"
             target="_blank"
@@ -213,7 +213,7 @@ const Home = () => {
               transition: 'all 0.2s ease',
             }}
           >
-            Bhagyesh Purohit
+            Bhagyesh Purohit ↗
           </a>
         </footer>
       </main>

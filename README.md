@@ -312,5 +312,5 @@ npm run dev
 ---
 
 ## 📄 License
-MIT License. Built with 💙 by Bhagyesh Purohit for full-stack gaming demonstrations and competitions.
+MIT License. Developed by Bhagyesh Purohit for full-stack gaming demonstrations and competitions.
 
