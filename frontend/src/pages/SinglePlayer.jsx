@@ -248,17 +248,17 @@ const SinglePlayer = () => {
             ) : (
               <div style={{ margin: '0.5rem 0', textAlign: 'center' }}>
                 {winnerInfo?.winner === 'X' && (
-                  <h3 style={{ fontSize: '1.4rem', fontWeight: '900', color: '#00f0ff', textShadow: '0 0 20px rgba(0,240,255,0.6)' }}>
+                  <h3 style={{ fontSize: '1.4rem', fontWeight: '900', color: 'var(--color-x)', textShadow: '0 0 16px var(--color-x-glow)' }}>
                     🎉 You are the Winner!
                   </h3>
                 )}
                 {winnerInfo?.winner === 'O' && (
-                  <h3 style={{ fontSize: '1.4rem', fontWeight: '900', color: '#ff007a', textShadow: '0 0 20px rgba(255,0,122,0.6)' }}>
+                  <h3 style={{ fontSize: '1.4rem', fontWeight: '900', color: 'var(--color-o)', textShadow: '0 0 16px var(--color-o-glow)' }}>
                     💀 You Lose!
                   </h3>
                 )}
                 {isDraw && (
-                  <h3 style={{ fontSize: '1.4rem', fontWeight: '900', color: '#cbd5e1' }}>
+                  <h3 style={{ fontSize: '1.4rem', fontWeight: '900', color: 'var(--text-secondary)' }}>
                     🤝 It’s a Draw!
                   </h3>
                 )}

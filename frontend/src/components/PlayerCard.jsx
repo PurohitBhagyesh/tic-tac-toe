@@ -32,28 +32,28 @@ const PlayerCard = ({
 
         {isUser && (
           <span style={{
-            padding: '1px 7px',
+            padding: '1px 8px',
             borderRadius: '10px',
             fontSize: '0.68rem',
             fontWeight: '800',
-            background: 'rgba(139, 92, 246, 0.2)',
-            color: '#c084fc',
-            border: '1px solid rgba(139, 92, 246, 0.4)',
-            letterSpacing: '0.03em'
+            background: 'rgba(16, 185, 129, 0.18)',
+            color: 'var(--color-x)',
+            border: '1px solid rgba(16, 185, 129, 0.4)',
+            letterSpacing: '0.04em'
           }}>
             YOU
           </span>
         )}
 
         {!isConnected && (
-          <span style={{ display: 'flex', alignItems: 'center', gap: '3px', color: '#ff4d79', fontSize: '0.7rem' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '3px', color: '#ef4444', fontSize: '0.7rem' }}>
             <WifiOff size={10} /> Disconnected
           </span>
         )}
       </div>
 
       {/* Live Score Counter */}
-      <div className="player-score-badge" style={{ color: isX ? '#00f0ff' : '#ff007a' }}>
+      <div className="player-score-badge" style={{ color: isX ? 'var(--color-x)' : 'var(--color-o)' }}>
         {score}
       </div>
 

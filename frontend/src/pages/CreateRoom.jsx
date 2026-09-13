@@ -89,37 +89,37 @@ const CreateRoom = () => {
       <main className="main-content">
         {!roomData ? (
           /* Step 1: Input Host Name */
-          <div className="glass-card" style={{ width: '100%', maxWidth: '440px', padding: '2.25rem 2rem' }}>
+          <div className="glass-card" style={{ width: '100%', maxWidth: '460px', padding: '2.25rem 2rem' }}>
             <div style={{ textAlign: 'center', marginBottom: '1.75rem' }}>
               <div style={{
                 width: '60px',
                 height: '60px',
                 borderRadius: '18px',
-                background: 'rgba(0, 240, 255, 0.12)',
+                background: 'rgba(16, 185, 129, 0.14)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 margin: '0 auto 1rem',
-                border: '1.5px solid rgba(0, 240, 255, 0.4)',
-                boxShadow: '0 0 20px rgba(0, 240, 255, 0.25)'
+                border: '1.5px solid rgba(16, 185, 129, 0.4)',
+                boxShadow: '0 0 20px var(--color-x-glow)'
               }}>
-                <Sparkles size={30} color="#00f0ff" />
+                <Sparkles size={30} color="var(--color-x)" />
               </div>
-              <h2 style={{ fontSize: '1.6rem', fontWeight: '900', color: '#f8fafc' }}>
+              <h2 style={{ fontSize: '1.6rem', fontWeight: '900', color: 'var(--text-primary)' }}>
                 Create Game Room
               </h2>
-              <p style={{ color: '#94a3b8', fontSize: '0.92rem', marginTop: '0.25rem' }}>
-                You will play as Host (<span style={{ color: '#00f0ff', fontWeight: '900' }}>X</span>)
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.92rem', marginTop: '0.25rem' }}>
+                You will play as Host (<span style={{ color: 'var(--color-x)', fontWeight: '900' }}>X</span>)
               </p>
             </div>
 
             {errorMessage && (
               <div style={{
                 padding: '0.75rem 1rem',
-                background: 'rgba(255, 0, 85, 0.15)',
-                border: '1px solid rgba(255, 0, 85, 0.35)',
+                background: 'rgba(239, 68, 68, 0.15)',
+                border: '1px solid rgba(239, 68, 68, 0.35)',
                 borderRadius: '12px',
-                color: '#ff4d79',
+                color: '#ef4444',
                 fontSize: '0.88rem',
                 marginBottom: '1.25rem',
                 display: 'flex',
@@ -159,12 +159,12 @@ const CreateRoom = () => {
           </div>
         ) : (
           /* Step 2: Room Created -> Display Code, QR & Waiting Status */
-          <div style={{ width: '100%', maxWidth: '440px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.25rem' }}>
+          <div style={{ width: '100%', maxWidth: '460px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.25rem' }}>
             <div style={{ textAlign: 'center' }}>
-              <h2 style={{ fontSize: '1.6rem', fontWeight: '900', color: '#f8fafc' }}>
+              <h2 style={{ fontSize: '1.6rem', fontWeight: '900', color: 'var(--text-primary)' }}>
                 Room Ready!
               </h2>
-              <p style={{ color: '#94a3b8', fontSize: '0.92rem' }}>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.92rem' }}>
                 Share this 6-digit code or QR code with Player 2
               </p>
             </div>
@@ -184,10 +184,10 @@ const CreateRoom = () => {
               background: 'rgba(245, 158, 11, 0.12)',
               border: '1px solid rgba(245, 158, 11, 0.35)',
               borderRadius: '24px',
-              color: '#fbbf24',
+              color: 'var(--color-o)',
               fontWeight: '700',
               fontSize: '0.92rem',
-              boxShadow: '0 0 15px rgba(245, 158, 11, 0.15)'
+              boxShadow: '0 0 15px var(--color-o-glow)'
             }}>
               <Loader2 size={18} style={{ animation: 'spin 1.5s linear infinite' }} />
               <span>Waiting for Player 2 to join…</span>

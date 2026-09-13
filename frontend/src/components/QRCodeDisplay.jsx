@@ -40,8 +40,8 @@ const QRCodeDisplay = ({ roomCode }) => {
       alignItems: 'center',
       gap: '1rem',
       padding: '1.25rem',
-      background: 'rgba(18, 24, 38, 0.7)',
-      border: '1px solid var(--border-glass)',
+      background: 'var(--bg-input)',
+      border: '1.5px solid var(--border-glass)',
       borderRadius: 'var(--radius-lg)',
       width: '100%',
       maxWidth: '360px',
@@ -51,7 +51,7 @@ const QRCodeDisplay = ({ roomCode }) => {
         padding: '12px',
         background: '#ffffff',
         borderRadius: '16px',
-        boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+        boxShadow: 'var(--shadow-md)',
         display: 'inline-block'
       }}>
         <QRCodeSVG
@@ -62,7 +62,7 @@ const QRCodeDisplay = ({ roomCode }) => {
         />
       </div>
 
-      <p style={{ fontSize: '0.85rem', color: '#94a3b8', textAlign: 'center', maxWidth: '280px' }}>
+      <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', textAlign: 'center', maxWidth: '280px' }}>
         Have your friend scan this QR code with their phone camera to join instantly!
       </p>
 

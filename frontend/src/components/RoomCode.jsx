@@ -22,16 +22,16 @@ const RoomCode = ({ code = '000000' }) => {
       alignItems: 'center',
       gap: '0.75rem',
       padding: '1.25rem 1.5rem',
-      background: 'rgba(10, 14, 23, 0.7)',
-      border: '1px solid rgba(0, 240, 255, 0.25)',
+      background: 'var(--bg-input)',
+      border: '1.5px solid var(--border-glass-bright)',
       borderRadius: 'var(--radius-lg)',
-      boxShadow: '0 0 20px rgba(0, 240, 255, 0.1)',
+      boxShadow: 'var(--shadow-sm)',
       width: '100%',
       maxWidth: '360px',
       margin: '0.5rem auto'
     }}>
-      <span style={{ fontSize: '0.8rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#94a3b8' }}>
-        Room Code
+      <span style={{ fontSize: '0.8rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--text-muted)' }}>
+        ROOM CODE
       </span>
 
       <div style={{
@@ -39,8 +39,8 @@ const RoomCode = ({ code = '000000' }) => {
         fontWeight: '900',
         fontFamily: 'var(--font-mono)',
         letterSpacing: '0.25em',
-        color: '#00f0ff',
-        textShadow: '0 0 15px rgba(0, 240, 255, 0.4)',
+        color: 'var(--color-x)',
+        textShadow: '0 0 16px var(--color-x-glow)',
         paddingLeft: '0.25em' // visual balance
       }}>
         {code}

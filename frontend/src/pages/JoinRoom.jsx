@@ -77,26 +77,26 @@ const JoinRoom = () => {
       <Header showBack backTo="/multiplayer" />
 
       <main className="main-content">
-        <div className="glass-card" style={{ width: '100%', maxWidth: '440px', padding: '2.25rem 2rem' }}>
+        <div className="glass-card" style={{ width: '100%', maxWidth: '460px', padding: '2.25rem 2rem' }}>
           <div style={{ textAlign: 'center', marginBottom: '1.75rem' }}>
             <div style={{
               width: '60px',
               height: '60px',
               borderRadius: '18px',
-              background: 'rgba(255, 0, 122, 0.12)',
+              background: 'rgba(245, 158, 11, 0.14)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               margin: '0 auto 1rem',
-              border: '1.5px solid rgba(255, 0, 122, 0.4)',
-              boxShadow: '0 0 20px rgba(255, 0, 122, 0.25)'
+              border: '1.5px solid rgba(245, 158, 11, 0.4)',
+              boxShadow: '0 0 20px var(--color-o-glow)'
             }}>
-              <LogIn size={30} color="#ff007a" />
+              <LogIn size={30} color="var(--color-o)" />
             </div>
-            <h2 style={{ fontSize: '1.6rem', fontWeight: '900', color: '#f8fafc' }}>
+            <h2 style={{ fontSize: '1.6rem', fontWeight: '900', color: 'var(--text-primary)' }}>
               Join Game Room
             </h2>
-            <p style={{ color: '#94a3b8', fontSize: '0.92rem', marginTop: '0.25rem' }}>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.92rem', marginTop: '0.25rem' }}>
               Enter 6-digit code or scan host’s QR code
             </p>
           </div>
@@ -104,10 +104,10 @@ const JoinRoom = () => {
           {errorMessage && (
             <div style={{
               padding: '0.75rem 1rem',
-              background: 'rgba(255, 0, 85, 0.15)',
-              border: '1px solid rgba(255, 0, 85, 0.35)',
+              background: 'rgba(239, 68, 68, 0.15)',
+              border: '1px solid rgba(239, 68, 68, 0.35)',
               borderRadius: '12px',
-              color: '#ff4d79',
+              color: '#ef4444',
               fontSize: '0.88rem',
               marginBottom: '1.25rem',
               display: 'flex',
@@ -136,7 +136,7 @@ const JoinRoom = () => {
                     gap: '0.35rem',
                     background: 'none',
                     border: 'none',
-                    color: '#00f0ff',
+                    color: 'var(--color-x)',
                     fontSize: '0.82rem',
                     fontWeight: '800',
                     cursor: 'pointer',
@@ -161,7 +161,7 @@ const JoinRoom = () => {
                   letterSpacing: '0.18em',
                   textAlign: 'center',
                   fontWeight: '800',
-                  color: '#00f0ff'
+                  color: 'var(--color-x)'
                 }}
                 onChange={(e) => setRoomCode(e.target.value.replace(/\D/g, ''))}
                 autoFocus={!paramCode}

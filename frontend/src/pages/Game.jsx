@@ -235,13 +235,13 @@ const Game = () => {
             <div style={{
               margin: '0.5rem 0',
               padding: '0.6rem 1.4rem',
-              background: 'rgba(139, 92, 246, 0.18)',
-              border: '1.5px solid rgba(139, 92, 246, 0.5)',
+              background: 'rgba(16, 185, 129, 0.15)',
+              border: '1.5px solid var(--border-glass-bright)',
               borderRadius: '24px',
               textAlign: 'center',
-              boxShadow: '0 0 20px rgba(139, 92, 246, 0.3)'
+              boxShadow: '0 0 20px var(--color-x-glow)'
             }}>
-              <span style={{ fontSize: '1.05rem', fontWeight: '900', color: '#c084fc' }}>
+              <span style={{ fontSize: '1.05rem', fontWeight: '900', color: 'var(--color-x)' }}>
                 {match.roundWinner === 'draw'
                   ? '🤝 Round Draw!'
                   : `🎉 ${match.roundWinner === 'X' ? (player1?.name || 'Player 1') : (player2?.name || 'Player 2')} won Round ${match.currentRound}!`}

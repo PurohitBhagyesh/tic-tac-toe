@@ -12,28 +12,35 @@ const Multiplayer = () => {
       <Header showBack backTo="/" />
 
       <main className="main-content">
-        <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+        <div style={{ textAlign: 'center', marginBottom: '2.25rem', width: '100%' }}>
           <div style={{
             display: 'inline-flex',
             alignItems: 'center',
             gap: '0.5rem',
-            padding: '0.4rem 1rem',
-            background: 'rgba(255, 0, 85, 0.1)',
-            border: '1px solid rgba(255, 0, 85, 0.3)',
-            borderRadius: '20px',
-            fontSize: '0.85rem',
-            fontWeight: '600',
-            color: '#ff4d79',
-            marginBottom: '1rem'
+            padding: '0.4rem 1.1rem',
+            background: 'rgba(16, 185, 129, 0.12)',
+            border: '1.5px solid rgba(16, 185, 129, 0.35)',
+            borderRadius: '24px',
+            fontSize: 'clamp(0.78rem, 2vw, 0.88rem)',
+            fontWeight: '800',
+            color: 'var(--color-x)',
+            marginBottom: '0.85rem',
+            boxShadow: '0 0 16px var(--color-x-glow)'
           }}>
-            <Sparkles size={14} color="#ff0055" />
-            <span>Real-Time Online Matches</span>
+            <Sparkles size={15} color="var(--color-x)" />
+            <span>Real-Time Botanical Arena</span>
           </div>
 
-          <h1 style={{ fontSize: 'clamp(2rem, 5vw, 2.75rem)', fontWeight: '900', letterSpacing: '-0.02em', marginBottom: '0.5rem' }}>
+          <h1 style={{
+            fontSize: 'clamp(2.1rem, 5vw, 2.85rem)',
+            fontWeight: '900',
+            letterSpacing: '-0.02em',
+            marginBottom: '0.4rem',
+            lineHeight: '1.15'
+          }}>
             Multiplayer Mode
           </h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '1rem', fontWeight: '500' }}>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 'clamp(0.95rem, 2.5vw, 1.05rem)', fontWeight: '600' }}>
             Create a custom room or join an existing game with a 6-digit code / QR
           </p>
         </div>
@@ -43,7 +50,7 @@ const Multiplayer = () => {
           gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
           gap: '1.5rem',
           width: '100%',
-          maxWidth: '650px',
+          maxWidth: '720px',
           alignItems: 'stretch'
         }}>
           {/* Create Room */}
@@ -55,7 +62,7 @@ const Multiplayer = () => {
             textAlign: 'center',
             justifyContent: 'space-between',
             height: '100%',
-            minHeight: '330px'
+            minHeight: '340px'
           }}>
             <div style={{
               display: 'flex',
@@ -68,12 +75,12 @@ const Multiplayer = () => {
                 width: '68px',
                 height: '68px',
                 borderRadius: '22px',
-                background: 'rgba(56, 189, 248, 0.12)',
-                border: '1.5px solid rgba(56, 189, 248, 0.4)',
+                background: 'rgba(16, 185, 129, 0.14)',
+                border: '1.5px solid rgba(16, 185, 129, 0.4)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                boxShadow: '0 0 25px var(--color-x-glow)',
+                boxShadow: '0 0 20px var(--color-x-glow)',
                 marginBottom: '1.25rem'
               }}>
                 <PlusCircle size={34} color="var(--color-x)" />
@@ -115,7 +122,7 @@ const Multiplayer = () => {
             textAlign: 'center',
             justifyContent: 'space-between',
             height: '100%',
-            minHeight: '330px'
+            minHeight: '340px'
           }}>
             <div style={{
               display: 'flex',
@@ -128,12 +135,12 @@ const Multiplayer = () => {
                 width: '68px',
                 height: '68px',
                 borderRadius: '22px',
-                background: 'rgba(251, 113, 133, 0.12)',
-                border: '1.5px solid rgba(251, 113, 133, 0.4)',
+                background: 'rgba(245, 158, 11, 0.14)',
+                border: '1.5px solid rgba(245, 158, 11, 0.4)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                boxShadow: '0 0 25px var(--color-o-glow)',
+                boxShadow: '0 0 20px var(--color-o-glow)',
                 marginBottom: '1.25rem'
               }}>
                 <LogIn size={34} color="var(--color-o)" />

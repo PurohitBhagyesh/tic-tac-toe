@@ -144,17 +144,17 @@ const Result = () => {
                     width: '80px',
                     height: '80px',
                     borderRadius: '26px',
-                    background: 'rgba(0, 240, 255, 0.15)',
-                    border: '1.5px solid rgba(0, 240, 255, 0.45)',
+                    background: 'rgba(16, 185, 129, 0.15)',
+                    border: '1.5px solid rgba(16, 185, 129, 0.45)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     margin: '0 auto 1.25rem',
-                    boxShadow: '0 0 35px rgba(0, 240, 255, 0.35)'
+                    boxShadow: '0 0 30px var(--color-x-glow)'
                   }}>
-                    <Trophy size={44} color="#00f0ff" />
+                    <Trophy size={44} color="var(--color-x)" />
                   </div>
-                  <h1 style={{ fontSize: '2.1rem', fontWeight: '900', color: '#00f0ff', letterSpacing: '-0.02em', textShadow: '0 0 25px rgba(0,240,255,0.5)' }}>
+                  <h1 style={{ fontSize: '2.1rem', fontWeight: '900', color: 'var(--color-x)', letterSpacing: '-0.02em', textShadow: '0 0 20px var(--color-x-glow)' }}>
                     You Are The Winner!
                   </h1>
                 </>
@@ -166,17 +166,17 @@ const Result = () => {
                     width: '80px',
                     height: '80px',
                     borderRadius: '26px',
-                    background: 'rgba(255, 0, 122, 0.15)',
-                    border: '1.5px solid rgba(255, 0, 122, 0.45)',
+                    background: 'rgba(245, 158, 11, 0.15)',
+                    border: '1.5px solid rgba(245, 158, 11, 0.45)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     margin: '0 auto 1.25rem',
-                    boxShadow: '0 0 35px rgba(255, 0, 122, 0.35)'
+                    boxShadow: '0 0 30px var(--color-o-glow)'
                   }}>
-                    <Frown size={44} color="#ff007a" />
+                    <Frown size={44} color="var(--color-o)" />
                   </div>
-                  <h1 style={{ fontSize: '2.1rem', fontWeight: '900', color: '#ff007a', letterSpacing: '-0.02em', textShadow: '0 0 25px rgba(255,0,122,0.5)' }}>
+                  <h1 style={{ fontSize: '2.1rem', fontWeight: '900', color: 'var(--color-o)', letterSpacing: '-0.02em', textShadow: '0 0 20px var(--color-o-glow)' }}>
                     You Are The Loser!
                   </h1>
                 </>
@@ -188,17 +188,17 @@ const Result = () => {
                     width: '80px',
                     height: '80px',
                     borderRadius: '26px',
-                    background: 'rgba(139, 92, 246, 0.15)',
-                    border: '1.5px solid rgba(139, 92, 246, 0.45)',
+                    background: 'rgba(52, 211, 153, 0.12)',
+                    border: '1.5px solid rgba(52, 211, 153, 0.4)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     margin: '0 auto 1.25rem',
-                    boxShadow: '0 0 35px rgba(139, 92, 246, 0.35)'
+                    boxShadow: '0 0 25px var(--color-x-glow)'
                   }}>
-                    <Award size={44} color="#c084fc" />
+                    <Award size={44} color="var(--color-x)" />
                   </div>
-                  <h1 style={{ fontSize: '2.1rem', fontWeight: '900', color: '#cbd5e1', letterSpacing: '-0.02em' }}>
+                  <h1 style={{ fontSize: '2.1rem', fontWeight: '900', color: 'var(--text-secondary)', letterSpacing: '-0.02em' }}>
                     Match Draw!
                   </h1>
                 </>
@@ -209,35 +209,35 @@ const Result = () => {
             <div style={{
               width: '100%',
               padding: '1.4rem',
-              background: 'rgba(11, 17, 32, 0.75)',
-              border: '1px solid var(--border-glass)',
+              background: 'var(--bg-input)',
+              border: '1.5px solid var(--border-glass)',
               borderRadius: 'var(--radius-lg)',
               display: 'flex',
               flexDirection: 'column',
               gap: '0.85rem',
-              boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.5)'
+              boxShadow: 'var(--shadow-sm)'
             }}>
-              <span style={{ fontSize: '0.82rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#94a3b8' }}>
-                Final Score (5 Rounds)
+              <span style={{ fontSize: '0.82rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-muted)' }}>
+                FINAL SCORE (5 ROUNDS)
               </span>
 
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-around' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                  <span style={{ fontSize: '1.05rem', fontWeight: '800', color: '#00f0ff' }}>
+                  <span style={{ fontSize: '1.05rem', fontWeight: '800', color: 'var(--color-x)' }}>
                     {p1Name} (X)
                   </span>
-                  <span style={{ fontSize: '2.6rem', fontWeight: '900', fontFamily: 'var(--font-mono)', color: '#00f0ff' }}>
+                  <span style={{ fontSize: '2.6rem', fontWeight: '900', fontFamily: 'var(--font-mono)', color: 'var(--color-x)' }}>
                     {match?.scores?.X || 0}
                   </span>
                 </div>
 
-                <span style={{ fontSize: '1.6rem', fontWeight: '900', color: '#64748b' }}>-</span>
+                <span style={{ fontSize: '1.6rem', fontWeight: '900', color: 'var(--text-muted)' }}>-</span>
 
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                  <span style={{ fontSize: '1.05rem', fontWeight: '800', color: '#ff007a' }}>
+                  <span style={{ fontSize: '1.05rem', fontWeight: '800', color: 'var(--color-o)' }}>
                     {p2Name} (O)
                   </span>
-                  <span style={{ fontSize: '2.6rem', fontWeight: '900', fontFamily: 'var(--font-mono)', color: '#ff007a' }}>
+                  <span style={{ fontSize: '2.6rem', fontWeight: '900', fontFamily: 'var(--font-mono)', color: 'var(--color-o)' }}>
                     {match?.scores?.O || 0}
                   </span>
                 </div>

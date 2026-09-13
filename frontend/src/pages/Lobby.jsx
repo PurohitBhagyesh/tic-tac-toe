@@ -153,7 +153,7 @@ const Lobby = () => {
                 alignItems: 'center',
                 gap: '0.4rem',
                 padding: '0.35rem 1.1rem',
-                background: 'rgba(56, 189, 248, 0.12)',
+                background: 'rgba(16, 185, 129, 0.14)',
                 borderRadius: '24px',
                 border: '1.5px solid var(--border-glass-bright)',
                 color: 'var(--color-x)',
