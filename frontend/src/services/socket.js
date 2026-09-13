@@ -1,12 +1,30 @@
 import { io } from 'socket.io-client';
 
-const SOCKET_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const getSocketUrl = () => {
+  let url = import.meta.env.VITE_API_URL;
+  if (!url || typeof url !== 'string') {
+    return 'http://localhost:5000';
+  }
+
+  url = url.trim();
+
+  // If user accidentally put database URL (postgresql://) in frontend VITE_API_URL
+  if (url.startsWith('postgres://') || url.startsWith('postgresql://')) {
+    console.error('⚠️ [Config Error] VITE_API_URL was set to a PostgreSQL database URL instead of your Render backend URL (https://tic-tac-toe-xcsr.onrender.com).');
+    return 'https://tic-tac-toe-xcsr.onrender.com';
+  }
+
+  return url.replace(/\/+$/, '');
+};
+
+const SOCKET_URL = getSocketUrl();
 
 let socket = null;
 
 export const connectSocket = () => {
   if (!socket || !socket.connected) {
-    socket = io(SOCKET_URL, {
+    const targetUrl = getSocketUrl();
+    socket = io(targetUrl, {
       transports: ['websocket', 'polling'],
       autoConnect: true,
       reconnection: true,
