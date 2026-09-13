@@ -49,7 +49,7 @@ export const setupSocketHandlers = (io) => {
     });
 
     /**
-     * Ready check
+     * Ready check (Both players must get ready)
      */
     socket.on('room:ready', async ({ roomCode, playerId, ready }) => {
       try {
@@ -62,23 +62,49 @@ export const setupSocketHandlers = (io) => {
         io.to(`room_${roomCode}`).emit('room:readyUpdate', {
           room: result.room,
           playerId,
-          ready
+          ready,
+          allReady: result.allReady,
         });
-
-        // If all players are ready, automatically start match!
-        if (result.allReady) {
-          const matchResult = await gameService.startMatch(roomCode);
-          if (matchResult.success) {
-            console.log(`🎮 Game started for room: ${roomCode}`);
-            io.to(`room_${roomCode}`).emit('game:start', {
-              room: matchResult.room,
-              message: 'Game is starting! Round 1 of 5'
-            });
-          }
-        }
       } catch (error) {
         console.error('[Socket room:ready Error]:', error.message);
         socket.emit('game:error', { message: 'Failed to update ready state' });
+      }
+    });
+
+    /**
+     * Host Start Game (Triggered by Host when both players are ready)
+     */
+    socket.on('game:hostStart', async ({ roomCode, playerId }) => {
+      try {
+        const room = await roomService.getRoom(roomCode);
+        if (!room) {
+          socket.emit('game:error', { message: 'Room not found' });
+          return;
+        }
+
+        const isHost = room.players.length > 0 && room.players[0].id === playerId;
+        if (!isHost) {
+          socket.emit('game:error', { message: 'Only the host can start the game.' });
+          return;
+        }
+
+        const allReady = room.players.length === 2 && room.players.every(p => p.ready);
+        if (!allReady) {
+          socket.emit('game:error', { message: 'Both players must be ready before starting.' });
+          return;
+        }
+
+        const matchResult = await gameService.startMatch(roomCode);
+        if (matchResult.success) {
+          console.log(`🎮 Game started by host for room: ${roomCode}`);
+          io.to(`room_${roomCode}`).emit('game:start', {
+            room: matchResult.room,
+            message: 'Game started! Round 1 of 5'
+          });
+        }
+      } catch (error) {
+        console.error('[Socket game:hostStart Error]:', error.message);
+        socket.emit('game:error', { message: 'Failed to start game' });
       }
     });
 

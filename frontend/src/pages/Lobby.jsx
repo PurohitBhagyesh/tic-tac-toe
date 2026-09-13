@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { Users, CheckCircle2, Clock, Loader2, Play } from 'lucide-react';
+import { Users, CheckCircle2, Clock, Loader2, Play, Sparkles } from 'lucide-react';
 import Header from '../components/Header';
 import Button from '../components/Button';
 import PlayerCard from '../components/PlayerCard';
 import ConfirmModal from '../components/ConfirmModal';
 import { api } from '../services/api';
 import { socketService, connectSocket } from '../services/socket';
-import { getStoredPlayerId, getStoredPlayerName } from '../utils/storage';
+import { getStoredPlayerId } from '../utils/storage';
 import { playSound } from '../utils/sound';
 
 const Lobby = () => {
@@ -89,12 +89,19 @@ const Lobby = () => {
   }, [roomCode, currentUserId, currentUser, navigate]);
 
   // Toggle Ready
-  const handleToggleReady = async () => {
+  const handleToggleReady = () => {
     if (!roomCode || !currentUserId) return;
     playSound('click');
     const nextReady = !isReady;
     setIsReady(nextReady);
     socketService.sendReady(roomCode, currentUserId, nextReady);
+  };
+
+  // Host starts the game
+  const handleHostStartGame = () => {
+    if (!roomCode || !currentUserId) return;
+    playSound('win');
+    socketService.sendHostStart(roomCode, currentUserId);
   };
 
   // Leave room
@@ -112,6 +119,9 @@ const Lobby = () => {
   const player1 = room?.players?.[0] || null;
   const player2 = room?.players?.[1] || null;
 
+  const isHost = player1?.id === currentUserId;
+  const bothPlayersReady = player1?.ready && player2?.ready;
+
   return (
     <div className="app-container">
       <Header
@@ -123,9 +133,9 @@ const Lobby = () => {
 
       <main className="main-content">
         {isLoading ? (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', color: '#94a3b8' }}>
-            <Loader2 size={36} style={{ animation: 'spin 1s linear infinite', color: '#00f0ff' }} />
-            <span style={{ fontWeight: '700' }}>Entering Game Lobby...</span>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', color: 'var(--text-secondary)' }}>
+            <Loader2 size={36} style={{ animation: 'spin 1s linear infinite', color: 'var(--color-x)' }} />
+            <span style={{ fontWeight: '800' }}>Entering Game Lobby...</span>
           </div>
         ) : errorMessage ? (
           <div className="glass-card" style={{ padding: '2rem', textAlign: 'center', maxWidth: '400px' }}>
@@ -142,24 +152,24 @@ const Lobby = () => {
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '0.4rem',
-                padding: '0.3rem 1rem',
-                background: 'rgba(0, 240, 255, 0.12)',
-                borderRadius: '20px',
-                border: '1.5px solid rgba(0, 240, 255, 0.35)',
-                color: '#00f0ff',
-                fontSize: '0.88rem',
+                padding: '0.35rem 1.1rem',
+                background: 'rgba(56, 189, 248, 0.12)',
+                borderRadius: '24px',
+                border: '1.5px solid var(--border-glass-bright)',
+                color: 'var(--color-x)',
+                fontSize: '0.9rem',
                 fontWeight: '900',
                 fontFamily: 'var(--font-mono)',
                 marginBottom: '0.6rem',
-                boxShadow: '0 0 15px rgba(0,240,255,0.2)'
+                boxShadow: '0 0 16px var(--color-x-glow)'
               }}>
                 ROOM #{roomCode}
               </div>
-              <h2 style={{ fontSize: '1.85rem', fontWeight: '900', color: '#f8fafc' }}>
+              <h2 style={{ fontSize: '1.9rem', fontWeight: '900', color: 'var(--text-primary)' }}>
                 Game Lobby
               </h2>
-              <p style={{ color: '#94a3b8', fontSize: '0.92rem' }}>
-                Both players must click Ready to launch the 5-round match
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
+                Both players click Ready ➔ Host starts the match
               </p>
             </div>
 
@@ -170,7 +180,7 @@ const Lobby = () => {
               gap: '1rem',
               width: '100%',
             }}>
-              {/* Player 1 Card */}
+              {/* Player 1 (Host) Card */}
               {player1 ? (
                 <PlayerCard
                   name={player1.name || 'Player 1'}
@@ -188,7 +198,7 @@ const Lobby = () => {
                 </div>
               )}
 
-              {/* Player 2 Card */}
+              {/* Player 2 (Guest) Card */}
               {player2 ? (
                 <PlayerCard
                   name={player2.name || 'Player 2'}
@@ -207,38 +217,74 @@ const Lobby = () => {
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: '0.6rem',
-                  border: '1.5px dashed rgba(255, 0, 122, 0.3)',
-                  color: '#94a3b8'
+                  border: '1.5px dashed var(--border-glass-bright)',
+                  color: 'var(--text-secondary)'
                 }}>
-                  <Loader2 size={26} style={{ animation: 'spin 2s linear infinite', color: '#ff007a' }} />
-                  <span style={{ fontSize: '0.88rem', fontWeight: '700' }}>Waiting for Player 2</span>
+                  <Loader2 size={26} style={{ animation: 'spin 2s linear infinite', color: 'var(--color-o)' }} />
+                  <span style={{ fontSize: '0.88rem', fontWeight: '800' }}>Waiting for Player 2</span>
                 </div>
               )}
             </div>
 
-            {/* Ready Action Section */}
-            <div style={{ width: '100%', marginTop: '0.5rem' }}>
-              <Button
-                variant={isReady ? 'secondary' : 'primary'}
-                size="lg"
-                className="btn-block"
-                onClick={handleToggleReady}
-                disabled={!player2}
-                icon={isReady ? CheckCircle2 : Play}
-              >
-                {isReady ? 'CANCEL READY' : 'READY TO PLAY'}
-              </Button>
+            {/* Ready / Start Actions */}
+            <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '0.25rem' }}>
+              {/* If both players are ready and current user is HOST -> SHOW START GAME BUTTON! */}
+              {bothPlayersReady && isHost ? (
+                <Button
+                  variant="primary"
+                  size="lg"
+                  className="btn-block"
+                  onClick={handleHostStartGame}
+                  icon={Play}
+                  style={{
+                    boxShadow: '0 0 30px var(--color-x-glow)',
+                    fontSize: '1.2rem',
+                    padding: '1.15rem'
+                  }}
+                >
+                  START GAME (ROUND 1/5)
+                </Button>
+              ) : (
+                /* Regular Ready Toggle Button */
+                <Button
+                  variant={isReady ? 'secondary' : 'primary'}
+                  size="lg"
+                  className="btn-block"
+                  onClick={handleToggleReady}
+                  disabled={!player2}
+                  icon={isReady ? CheckCircle2 : Play}
+                >
+                  {isReady ? 'CANCEL READY' : 'READY TO PLAY'}
+                </Button>
+              )}
             </div>
 
             {/* Status notification */}
             {player2 && (
-              <div style={{ color: '#94a3b8', fontSize: '0.88rem', textAlign: 'center', fontWeight: '600' }}>
-                {player1?.ready && player2?.ready ? (
-                  <span style={{ color: '#4ade80', fontWeight: '800' }}>Starting match now!</span>
+              <div style={{
+                color: 'var(--text-secondary)',
+                fontSize: '0.92rem',
+                textAlign: 'center',
+                fontWeight: '700',
+                padding: '0.5rem 1rem',
+                borderRadius: '16px',
+                background: 'var(--bg-input)',
+                border: '1px solid var(--border-glass)'
+              }}>
+                {bothPlayersReady ? (
+                  isHost ? (
+                    <span style={{ color: 'var(--color-x)', fontWeight: '900', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}>
+                      <Sparkles size={16} /> Both players ready! Click "START GAME" above.
+                    </span>
+                  ) : (
+                    <span style={{ color: 'var(--color-x)', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}>
+                      <Clock size={16} /> Both players ready! Waiting for Host to start the game...
+                    </span>
+                  )
                 ) : isReady ? (
                   <span>Waiting for opponent to click Ready...</span>
                 ) : (
-                  <span>Click Ready when you are ready!</span>
+                  <span>Click Ready when you are prepared!</span>
                 )}
               </div>
             )}
@@ -249,7 +295,7 @@ const Lobby = () => {
         <ConfirmModal
           isOpen={showLeaveModal}
           title="Leave Room"
-          message="Are you sure you want to leave this lobby?"
+          message="Are you sure you want to exit this lobby?"
           confirmText="Leave Lobby"
           onConfirm={handleLeaveRoom}
           onCancel={() => setShowLeaveModal(false)}

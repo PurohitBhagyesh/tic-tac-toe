@@ -1,133 +1,222 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { MoreVertical, BookOpen, Flag, LogOut, X } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Settings, Volume2, VolumeX, Sun, Moon, BookOpen, LogOut, X, Shield, Flag } from 'lucide-react';
 import Button from './Button';
+import { toggleMute, getMuteState, playSound } from '../utils/sound';
+import { getStoredTheme, toggleTheme, applyTheme } from '../utils/theme';
 
 const ThreeDotMenu = ({ onGiveUp, onLeaveRoom, isMultiplayer = false }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [showRules, setShowRules] = useState(false);
-  const menuRef = useRef(null);
+  const [isMuted, setIsMuted] = useState(getMuteState());
+  const [theme, setTheme] = useState(getStoredTheme());
 
-  // Close dropdown when clicking outside
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    applyTheme(theme);
+  }, [theme]);
+
+  const handleToggleSound = () => {
+    const nextMuted = toggleMute();
+    setIsMuted(nextMuted);
+    if (!nextMuted) {
+      playSound('pop');
+    }
+  };
+
+  const handleToggleTheme = () => {
+    playSound('click');
+    const nextTheme = toggleTheme();
+    setTheme(nextTheme);
+  };
 
   return (
-    <div style={{ position: 'relative' }} ref={menuRef}>
+    <>
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => {
+          playSound('click');
+          setIsOpen(true);
+        }}
         className="btn-icon"
         style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-        title="Game Options"
+        title="Settings & Options"
       >
-        <MoreVertical size={20} />
+        <Settings size={20} />
       </button>
 
-      {/* Dropdown Menu */}
+      {/* Settings Modal */}
       {isOpen && (
-        <div style={{
-          position: 'absolute',
-          top: '120%',
-          right: 0,
-          width: '180px',
-          background: '#111827',
-          border: '1px solid rgba(255, 255, 255, 0.12)',
-          borderRadius: '12px',
-          boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
-          zIndex: 50,
-          overflow: 'hidden',
-          padding: '0.4rem'
-        }}>
-          <button
-            onClick={() => {
-              setIsOpen(false);
-              setShowRules(true);
-            }}
-            style={{
-              width: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.6rem',
-              padding: '0.6rem 0.75rem',
-              background: 'transparent',
-              border: 'none',
-              color: '#f8fafc',
-              fontSize: '0.9rem',
-              fontWeight: '500',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              textAlign: 'left'
-            }}
-            onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.08)'}
-            onMouseLeave={(e) => e.target.style.background = 'transparent'}
-          >
-            <BookOpen size={16} color="#00f0ff" />
-            Game Rules
-          </button>
+        <div className="modal-overlay" onClick={() => setIsOpen(false)}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '400px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h3 style={{ fontSize: '1.3rem', fontWeight: '900', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                <Settings size={22} color="var(--color-x)" />
+                Settings & Options
+              </h3>
+              <button
+                onClick={() => setIsOpen(false)}
+                style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
 
-          {isMultiplayer && onGiveUp && (
-            <button
-              onClick={() => {
-                setIsOpen(false);
-                onGiveUp();
-              }}
-              style={{
-                width: '100%',
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {/* 1. Mute Audio Toggle */}
+              <div style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '0.6rem',
-                padding: '0.6rem 0.75rem',
-                background: 'transparent',
-                border: 'none',
-                color: '#ff4d79',
-                fontSize: '0.9rem',
-                fontWeight: '500',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                textAlign: 'left'
-              }}
-              onMouseEnter={(e) => e.target.style.background = 'rgba(255, 0, 85, 0.12)'}
-              onMouseLeave={(e) => e.target.style.background = 'transparent'}
-            >
-              <Flag size={16} color="#ff0055" />
-              Give Up
-            </button>
-          )}
+                justifyContent: 'space-between',
+                padding: '0.85rem 1rem',
+                background: 'var(--bg-input)',
+                border: '1.5px solid var(--border-glass)',
+                borderRadius: 'var(--radius-md)'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                  {isMuted ? <VolumeX size={20} color="var(--text-muted)" /> : <Volume2 size={20} color="var(--color-x)" />}
+                  <span style={{ fontWeight: '700', fontSize: '0.95rem', color: 'var(--text-primary)' }}>
+                    Game Audio FX
+                  </span>
+                </div>
 
-          {onLeaveRoom && (
-            <button
-              onClick={() => {
-                setIsOpen(false);
-                onLeaveRoom();
-              }}
-              style={{
-                width: '100%',
+                <button
+                  type="button"
+                  onClick={handleToggleSound}
+                  style={{
+                    padding: '0.4rem 0.9rem',
+                    borderRadius: '20px',
+                    border: '1.5px solid var(--border-glass)',
+                    background: isMuted ? 'rgba(255,255,255,0.06)' : 'rgba(56, 189, 248, 0.2)',
+                    color: isMuted ? 'var(--text-muted)' : 'var(--color-x)',
+                    fontWeight: '800',
+                    fontSize: '0.82rem',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {isMuted ? 'MUTED' : 'ENABLED'}
+                </button>
+              </div>
+
+              {/* 2. Dark / Light Mode Toggle */}
+              <div style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '0.6rem',
-                padding: '0.6rem 0.75rem',
-                background: 'transparent',
-                border: 'none',
-                color: '#94a3b8',
-                fontSize: '0.9rem',
-                fontWeight: '500',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                textAlign: 'left'
-              }}
-              onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.08)'}
-              onMouseLeave={(e) => e.target.style.background = 'transparent'}
-            >
-              <LogOut size={16} />
-              Leave Room
-            </button>
-          )}
+                justifyContent: 'space-between',
+                padding: '0.85rem 1rem',
+                background: 'var(--bg-input)',
+                border: '1.5px solid var(--border-glass)',
+                borderRadius: 'var(--radius-md)'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                  {theme === 'dark' ? <Moon size={20} color="#38bdf8" /> : <Sun size={20} color="#f59e0b" />}
+                  <span style={{ fontWeight: '700', fontSize: '0.95rem', color: 'var(--text-primary)' }}>
+                    Theme Appearance
+                  </span>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleToggleTheme}
+                  style={{
+                    padding: '0.4rem 0.9rem',
+                    borderRadius: '20px',
+                    border: '1.5px solid var(--border-glass)',
+                    background: 'rgba(56, 189, 248, 0.15)',
+                    color: 'var(--color-x)',
+                    fontWeight: '800',
+                    fontSize: '0.82rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.35rem'
+                  }}
+                >
+                  {theme === 'dark' ? 'DARK MODE' : 'LIGHT MODE'}
+                </button>
+              </div>
+
+              {/* 3. Game Rules Button */}
+              <button
+                type="button"
+                onClick={() => {
+                  playSound('pop');
+                  setIsOpen(false);
+                  setShowRules(true);
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '0.85rem 1rem',
+                  background: 'var(--bg-input)',
+                  border: '1.5px solid var(--border-glass)',
+                  borderRadius: 'var(--radius-md)',
+                  color: 'var(--text-primary)',
+                  fontWeight: '700',
+                  fontSize: '0.95rem',
+                  cursor: 'pointer'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                  <BookOpen size={20} color="var(--color-x)" />
+                  <span>Game Rules</span>
+                </div>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>➔</span>
+              </button>
+
+              {/* Give Up in Multiplayer */}
+              {isMultiplayer && onGiveUp && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsOpen(false);
+                    onGiveUp();
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.6rem',
+                    padding: '0.85rem 1rem',
+                    background: 'rgba(244, 63, 94, 0.1)',
+                    border: '1.5px solid rgba(244, 63, 94, 0.3)',
+                    borderRadius: 'var(--radius-md)',
+                    color: '#f43f5e',
+                    fontWeight: '800',
+                    fontSize: '0.95rem',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <Flag size={20} color="#f43f5e" />
+                  <span>Give Up Match</span>
+                </button>
+              )}
+
+              {/* 4. Exit / Leave Room Button */}
+              {onLeaveRoom && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsOpen(false);
+                    onLeaveRoom();
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.6rem',
+                    padding: '0.85rem 1rem',
+                    background: 'rgba(244, 63, 94, 0.1)',
+                    border: '1.5px solid rgba(244, 63, 94, 0.3)',
+                    borderRadius: 'var(--radius-md)',
+                    color: '#f43f5e',
+                    fontWeight: '800',
+                    fontSize: '0.95rem',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <LogOut size={20} />
+                  <span>Exit / Leave Room</span>
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       )}
 
@@ -136,30 +225,30 @@ const ThreeDotMenu = ({ onGiveUp, onLeaveRoom, isMultiplayer = false }) => {
         <div className="modal-overlay" onClick={() => setShowRules(false)}>
           <div className="modal-card" onClick={(e) => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <BookOpen size={20} color="#00f0ff" />
+              <h3 style={{ fontSize: '1.3rem', fontWeight: '900', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <BookOpen size={22} color="var(--color-x)" />
                 Game Rules
               </h3>
               <button
                 onClick={() => setShowRules(false)}
-                style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer' }}
+                style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
               >
                 <X size={20} />
               </button>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', color: '#cbd5e1', fontSize: '0.92rem', lineHeight: '1.5' }}>
-              <div style={{ padding: '0.75rem', background: 'rgba(255,255,255,0.04)', borderRadius: '10px' }}>
-                <strong style={{ color: '#00f0ff' }}>1. Board & Objective:</strong> Place 3 of your marks (X or O) in a horizontal, vertical, or diagonal row to win a round.
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', color: 'var(--text-secondary)', fontSize: '0.92rem', lineHeight: '1.5' }}>
+              <div style={{ padding: '0.85rem', background: 'var(--bg-input)', borderRadius: '12px', border: '1px solid var(--border-glass)' }}>
+                <strong style={{ color: 'var(--color-x)' }}>1. Objective:</strong> Place 3 of your marks (X or O) in a horizontal, vertical, or diagonal row to score a point.
               </div>
-              <div style={{ padding: '0.75rem', background: 'rgba(255,255,255,0.04)', borderRadius: '10px' }}>
-                <strong style={{ color: '#ff0055' }}>2. 5-Round Matches:</strong> Multiplayer matches consist of exactly 5 competitive rounds. The player with the highest score at the end wins!
+              <div style={{ padding: '0.85rem', background: 'var(--bg-input)', borderRadius: '12px', border: '1px solid var(--border-glass)' }}>
+                <strong style={{ color: 'var(--color-o)' }}>2. 5-Round Match:</strong> Matches consist of 5 competitive rounds. The player with the most round points wins the match!
               </div>
-              <div style={{ padding: '0.75rem', background: 'rgba(255,255,255,0.04)', borderRadius: '10px' }}>
-                <strong style={{ color: '#a855f7' }}>3. Turns & Draws:</strong> Players alternate starting turns each round. If all 9 cells are filled without a 3-in-a-row, it is a Draw (0 points).
+              <div style={{ padding: '0.85rem', background: 'var(--bg-input)', borderRadius: '12px', border: '1px solid var(--border-glass)' }}>
+                <strong style={{ color: 'var(--color-x)' }}>3. Ready System:</strong> Both players must hit Ready in the lobby. Once both are ready, the Host starts the match!
               </div>
-              <div style={{ padding: '0.75rem', background: 'rgba(255,255,255,0.04)', borderRadius: '10px' }}>
-                <strong style={{ color: '#eab308' }}>4. Forfeits & Rematches:</strong> Giving up forfeits the match to your opponent. When a match ends, both players can agree to a Rematch!
+              <div style={{ padding: '0.85rem', background: 'var(--bg-input)', borderRadius: '12px', border: '1px solid var(--border-glass)' }}>
+                <strong style={{ color: '#f59e0b' }}>4. Rematch:</strong> After all 5 rounds, both players can vote for a Rematch to start a fresh battle.
               </div>
             </div>
 
@@ -171,7 +260,7 @@ const ThreeDotMenu = ({ onGiveUp, onLeaveRoom, isMultiplayer = false }) => {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 };
 

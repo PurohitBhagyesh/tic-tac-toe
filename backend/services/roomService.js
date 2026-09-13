@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID as uuidv4 } from 'crypto';
 import { query, isDbConnected } from '../database/database.js';
 
 // In-memory active room cache for ultra-fast, low-latency Socket.IO state

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Home from './pages/Home';
 import SinglePlayer from './pages/SinglePlayer';
@@ -8,8 +8,13 @@ import JoinRoom from './pages/JoinRoom';
 import Lobby from './pages/Lobby';
 import Game from './pages/Game';
 import Result from './pages/Result';
+import { getStoredTheme, applyTheme } from './utils/theme';
 
 function App() {
+  useEffect(() => {
+    applyTheme(getStoredTheme());
+  }, []);
+
   return (
     <BrowserRouter>
       <Routes>

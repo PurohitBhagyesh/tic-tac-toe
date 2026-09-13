@@ -80,6 +80,11 @@ export const socketService = {
     s.emit('game:move', { roomCode, playerId, cellIndex });
   },
 
+  sendHostStart(roomCode, playerId) {
+    const s = getSocket();
+    s.emit('game:hostStart', { roomCode, playerId });
+  },
+
   sendNextRound(roomCode) {
     const s = getSocket();
     s.emit('game:nextRound', { roomCode });
