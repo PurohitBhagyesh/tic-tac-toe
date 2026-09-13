@@ -26,12 +26,14 @@ jobs:
 
       - name: Setup Pages
         id: pages
-        uses: actions/configure-pages@v4
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
 
@@ -46,7 +48,7 @@ jobs:
           cp dist/index.html dist/404.html
         env:
           VITE_API_URL: 'https://tic-tac-toe-xcsr.onrender.com'
-          VITE_BASE_PATH: ${{ steps.pages.outputs.base_path || '/tic-tac-toe/' }}
+          VITE_BASE_PATH: ${{ steps.pages.outputs.base_path || format('/{0}/', github.event.repository.name) }}
 
       - name: Upload Build Artifact
         uses: actions/upload-pages-artifact@v3
@@ -56,4 +58,5 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
 
