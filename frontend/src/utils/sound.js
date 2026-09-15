@@ -1,144 +1,142 @@
-/**
- * Procedural Web Audio API Sound Synthesizer
- * Generates all game sound effects programmatically with zero external asset dependencies.
- */
+// Lightweight Web Audio API Synthesizer for buttery-smooth tactile game sound effects
+let audioCtx = null;
+let isMuted = false;
 
-class SoundSynthesizer {
-  constructor() {
-    this.audioCtx = null;
-    this.muted = false;
-  }
-
-  /**
-   * Lazy initializes Web Audio Context on user interaction.
-   */
-  initContext() {
-    if (!this.audioCtx) {
-      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-      if (AudioContextClass) {
-        this.audioCtx = new AudioContextClass();
-      }
-    }
-    if (this.audioCtx && this.audioCtx.state === 'suspended') {
-      this.audioCtx.resume();
+const getAudioContext = () => {
+  if (!audioCtx && typeof window !== 'undefined') {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (AudioContextClass) {
+      audioCtx = new AudioContextClass();
     }
   }
-
-  /**
-   * Toggles sound audio output.
-   * @param {boolean} muted
-   */
-  setMuted(muted) {
-    this.muted = muted;
+  if (audioCtx && audioCtx.state === 'suspended') {
+    audioCtx.resume();
   }
+  return audioCtx;
+};
 
-  /**
-   * Move sound effect (Crisp chime for X, Warm tone for O)
-   * @param {string} symbol - 'X' or 'O'
-   */
-  playMoveSound(symbol = 'X') {
-    if (this.muted) return;
-    this.initContext();
-    if (!this.audioCtx) return;
+export const toggleMute = () => {
+  isMuted = !isMuted;
+  try {
+    localStorage.setItem('ttt_sound_muted', isMuted ? 'true' : 'false');
+  } catch (e) {}
+  return isMuted;
+};
 
-    const osc = this.audioCtx.createOscillator();
-    const gain = this.audioCtx.createGain();
-
-    osc.type = symbol === 'X' ? 'sine' : 'triangle';
-    const freq = symbol === 'X' ? 587.33 : 440; // D5 vs A4
-
-    osc.frequency.setValueAtTime(freq, this.audioCtx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(freq * 1.2, this.audioCtx.currentTime + 0.08);
-
-    gain.gain.setValueAtTime(0.15, this.audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + 0.12);
-
-    osc.connect(gain);
-    gain.connect(this.audioCtx.destination);
-
-    osc.start();
-    osc.stop(this.audioCtx.currentTime + 0.12);
+export const getMuteState = () => {
+  try {
+    return localStorage.getItem('ttt_sound_muted') === 'true';
+  } catch (e) {
+    return false;
   }
+};
 
-  /**
-   * Victory sound effect (Ascending 4-note arpeggio)
-   */
-  playWinSound() {
-    if (this.muted) return;
-    this.initContext();
-    if (!this.audioCtx) return;
+isMuted = getMuteState();
 
-    const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
-    notes.forEach((freq, index) => {
-      const osc = this.audioCtx.createOscillator();
-      const gain = this.audioCtx.createGain();
+export const playSound = (type) => {
+  if (isMuted) return;
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
 
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(freq, this.audioCtx.currentTime + index * 0.09);
+    const now = ctx.currentTime;
 
-      gain.gain.setValueAtTime(0, this.audioCtx.currentTime + index * 0.09);
-      gain.gain.linearRampToValueAtTime(0.2, this.audioCtx.currentTime + index * 0.09 + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + index * 0.09 + 0.25);
-
-      osc.connect(gain);
-      gain.connect(this.audioCtx.destination);
-
-      osc.start(this.audioCtx.currentTime + index * 0.09);
-      osc.stop(this.audioCtx.currentTime + index * 0.09 + 0.25);
-    });
-  }
-
-  /**
-   * Draw sound effect (Neutral resolving triad)
-   */
-  playDrawSound() {
-    if (this.muted) return;
-    this.initContext();
-    if (!this.audioCtx) return;
-
-    const notes = [440, 415.30, 392]; // A4 -> G#4 -> G4
-    notes.forEach((freq, index) => {
-      const osc = this.audioCtx.createOscillator();
-      const gain = this.audioCtx.createGain();
-
+    if (type === 'click' || type === 'pop') {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(freq, this.audioCtx.currentTime + index * 0.12);
-
-      gain.gain.setValueAtTime(0.12, this.audioCtx.currentTime + index * 0.12);
-      gain.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + index * 0.12 + 0.2);
-
+      osc.frequency.setValueAtTime(320, now);
+      osc.frequency.exponentialRampToValueAtTime(540, now + 0.08);
+      gain.gain.setValueAtTime(0.12, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
       osc.connect(gain);
-      gain.connect(this.audioCtx.destination);
-
-      osc.start(this.audioCtx.currentTime + index * 0.12);
-      osc.stop(this.audioCtx.currentTime + index * 0.12 + 0.2);
-    });
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.08);
+    } else if (type === 'move_x') {
+      // Crisp electric high chime for X
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(440, now);
+      osc.frequency.exponentialRampToValueAtTime(880, now + 0.12);
+      gain.gain.setValueAtTime(0.18, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.12);
+    } else if (type === 'move_o') {
+      // Warm resonant tone for O
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(660, now);
+      osc.frequency.exponentialRampToValueAtTime(330, now + 0.12);
+      gain.gain.setValueAtTime(0.18, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.12);
+    } else if (type === 'win') {
+      // Triumphant arpeggio
+      const notes = [523.25, 659.25, 783.99, 1046.5];
+      notes.forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, now + i * 0.09);
+        gain.gain.setValueAtTime(0.18, now + i * 0.09);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.09 + 0.35);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now + i * 0.09);
+        osc.stop(now + i * 0.09 + 0.35);
+      });
+    } else if (type === 'draw') {
+      // Neutral chord
+      const notes = [440, 415.3, 392];
+      notes.forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, now + i * 0.1);
+        gain.gain.setValueAtTime(0.12, now + i * 0.1);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.1 + 0.25);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now + i * 0.1);
+        osc.stop(now + i * 0.1 + 0.25);
+      });
+    } else if (type === 'tick') {
+      // Soft wood/clock tick for countdown under 5 seconds
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(800, now);
+      osc.frequency.exponentialRampToValueAtTime(400, now + 0.04);
+      gain.gain.setValueAtTime(0.08, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.04);
+    } else if (type === 'timeout') {
+      // Descending warning buzzer for timeout
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(320, now);
+      osc.frequency.exponentialRampToValueAtTime(140, now + 0.35);
+      gain.gain.setValueAtTime(0.16, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.35);
+    }
+  } catch (e) {
+    // Ignore audio errors gracefully
   }
-
-  /**
-   * Subtle UI click sound
-   */
-  playClickSound() {
-    if (this.muted) return;
-    this.initContext();
-    if (!this.audioCtx) return;
-
-    const osc = this.audioCtx.createOscillator();
-    const gain = this.audioCtx.createGain();
-
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(800, this.audioCtx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(400, this.audioCtx.currentTime + 0.04);
-
-    gain.gain.setValueAtTime(0.08, this.audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + 0.04);
-
-    osc.connect(gain);
-    gain.connect(this.audioCtx.destination);
-
-    osc.start();
-    osc.stop(this.audioCtx.currentTime + 0.04);
-  }
-}
-
-export const soundManager = new SoundSynthesizer();
+};

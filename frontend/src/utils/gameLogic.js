@@ -1,152 +1,174 @@
-/**
- * Tic-Tac-Toe Core Game Logic & Minimax AI Engine
- */
-
 export const WINNING_COMBINATIONS = [
-  [0, 1, 2], // Top row
-  [3, 4, 5], // Middle row
-  [6, 7, 8], // Bottom row
-  [0, 3, 6], // Left column
-  [1, 4, 7], // Middle column
-  [2, 5, 8], // Right column
-  [0, 4, 8], // Diagonal top-left to bottom-right
-  [2, 4, 6], // Diagonal top-right to bottom-left
+  [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
+  [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
+  [0, 4, 8], [2, 4, 6]             // Diagonals
 ];
 
 /**
- * Evaluates the current board state and determines if there is a winner or draw.
- * @param {Array<string>} board - 9-element array representing the board
- * @returns {Object} { winner: 'X'|'O'|'draw'|null, line: Array<number>|null }
+ * Check if a board has a winner
  */
 export const checkWinner = (board) => {
-  for (const combination of WINNING_COMBINATIONS) {
-    const [a, b, c] = combination;
+  for (const combo of WINNING_COMBINATIONS) {
+    const [a, b, c] = combo;
     if (board[a] && board[a] === board[b] && board[a] === board[c]) {
-      return { winner: board[a], line: combination };
+      return { winner: board[a], winningLine: combo };
     }
   }
-
-  const isDraw = board.every((cell) => cell !== '' && cell !== null);
-  if (isDraw) {
-    return { winner: 'draw', line: null };
-  }
-
-  return { winner: null, line: null };
+  return null;
 };
 
 /**
- * Returns array of available empty cell indices on the board.
- * @param {Array<string>} board
- * @returns {Array<number>}
+ * Check if the board is full with no winner
+ */
+export const checkDraw = (board) => {
+  const isFull = board.every(cell => cell !== null);
+  const win = checkWinner(board);
+  return isFull && !win;
+};
+
+/**
+ * Get all available cell indices (0..8)
  */
 export const getAvailableMoves = (board) => {
   const moves = [];
-  for (let i = 0; i < board.length; i++) {
-    if (!board[i] || board[i] === '') {
-      moves.push(i);
-    }
-  }
+  board.forEach((cell, index) => {
+    if (cell === null) moves.push(index);
+  });
   return moves;
 };
 
 /**
- * Recursive Minimax implementation with depth evaluation.
- * Calculates optimal scores for all possible game tree branches.
+ * Reset empty 3x3 board
  */
-const minimax = (board, depth, isMaximizing, aiSymbol, humanSymbol) => {
-  const { winner } = checkWinner(board);
+export const resetBoard = () => Array(9).fill(null);
 
-  if (winner === aiSymbol) return 10 - depth;
-  if (winner === humanSymbol) return depth - 10;
-  if (winner === 'draw') return 0;
+/* -------------------------------------------------------------
+   SINGLEPLAYER AI IMPLEMENTATIONS (Easy, Medium, Hard Minimax)
+------------------------------------------------------------- */
 
+/**
+ * 1. Easy AI: Picks a random empty cell
+ */
+export const getEasyMove = (board) => {
   const availableMoves = getAvailableMoves(board);
-
-  if (isMaximizing) {
-    let bestScore = -Infinity;
-    for (const move of availableMoves) {
-      board[move] = aiSymbol;
-      const score = minimax(board, depth + 1, false, aiSymbol, humanSymbol);
-      board[move] = '';
-      bestScore = Math.max(score, bestScore);
-    }
-    return bestScore;
-  } else {
-    let bestScore = Infinity;
-    for (const move of availableMoves) {
-      board[move] = humanSymbol;
-      const score = minimax(board, depth + 1, true, aiSymbol, humanSymbol);
-      board[move] = '';
-      bestScore = Math.min(score, bestScore);
-    }
-    return bestScore;
-  }
+  if (availableMoves.length === 0) return null;
+  const randomIndex = Math.floor(Math.random() * availableMoves.length);
+  return availableMoves[randomIndex];
 };
 
 /**
- * Determines the best move for AI based on the selected difficulty setting.
- * @param {Array<string>} board - Current 3x3 board array
- * @param {string} aiSymbol - 'X' or 'O'
- * @param {string} difficulty - 'easy' | 'medium' | 'hard'
- * @returns {number} Index of the selected cell (0-8)
+ * 2. Medium AI:
+ * - Tries to win immediately
+ * - Blocks opponent if opponent is about to win
+ * - Takes center or corners if open
+ * - Otherwise random
  */
-export const getBestAIMove = (board, aiSymbol, difficulty = 'hard') => {
+export const getMediumMove = (board, aiSymbol = 'O', humanSymbol = 'X') => {
   const availableMoves = getAvailableMoves(board);
-  if (availableMoves.length === 0) return -1;
+  if (availableMoves.length === 0) return null;
 
-  const humanSymbol = aiSymbol === 'X' ? 'O' : 'X';
-
-  // Easy Mode: Random Move
-  if (difficulty === 'easy') {
-    const randomIndex = Math.floor(Math.random() * availableMoves.length);
-    return availableMoves[randomIndex];
+  // 1. Check if AI can win in this turn
+  for (const move of availableMoves) {
+    const tempBoard = [...board];
+    tempBoard[move] = aiSymbol;
+    if (checkWinner(tempBoard)) {
+      return move;
+    }
   }
 
-  // Medium Mode: Heuristic approach (50% smart, 50% random or blocking)
-  if (difficulty === 'medium') {
-    // 1. Check if AI can win in next move
-    for (const move of availableMoves) {
-      board[move] = aiSymbol;
-      if (checkWinner(board).winner === aiSymbol) {
-        board[move] = '';
-        return move;
+  // 2. Check if Human can win next turn and block them
+  for (const move of availableMoves) {
+    const tempBoard = [...board];
+    tempBoard[move] = humanSymbol;
+    if (checkWinner(tempBoard)) {
+      return move;
+    }
+  }
+
+  // 3. Take center if free (70% probability for realistic medium feel)
+  if (board[4] === null && Math.random() > 0.3) {
+    return 4;
+  }
+
+  // 4. Take corners if free
+  const corners = [0, 2, 6, 8].filter(idx => board[idx] === null);
+  if (corners.length > 0 && Math.random() > 0.4) {
+    return corners[Math.floor(Math.random() * corners.length)];
+  }
+
+  // 5. Fallback random
+  return getEasyMove(board);
+};
+
+/**
+ * 3. Hard AI (Minimax Algorithm with Alpha-Beta Pruning) - Unbeatable optimal play
+ */
+export const getHardMove = (board, aiSymbol = 'O', humanSymbol = 'X') => {
+  const availableMoves = getAvailableMoves(board);
+  if (availableMoves.length === 0) return null;
+
+  // 1. Immediate Win
+  for (const move of availableMoves) {
+    const temp = [...board];
+    temp[move] = aiSymbol;
+    if (checkWinner(temp)) return move;
+  }
+
+  // 2. Immediate Block
+  for (const move of availableMoves) {
+    const temp = [...board];
+    temp[move] = humanSymbol;
+    if (checkWinner(temp)) return move;
+  }
+
+  // 3. Take Center if free on first moves
+  if (board[4] === null) {
+    return 4;
+  }
+
+  const boardClone = [...board];
+
+  const minimax = (currentBoard, depth, isMaximizing, alpha, beta) => {
+    const winResult = checkWinner(currentBoard);
+    if (winResult) {
+      if (winResult.winner === aiSymbol) return 10 - depth;
+      if (winResult.winner === humanSymbol) return depth - 10;
+    }
+    const moves = getAvailableMoves(currentBoard);
+    if (moves.length === 0) return 0;
+
+    if (isMaximizing) {
+      let maxEval = -Infinity;
+      for (const move of moves) {
+        currentBoard[move] = aiSymbol;
+        const evaluation = minimax(currentBoard, depth + 1, false, alpha, beta);
+        currentBoard[move] = null;
+        maxEval = Math.max(maxEval, evaluation);
+        alpha = Math.max(alpha, evaluation);
+        if (beta <= alpha) break;
       }
-      board[move] = '';
-    }
-
-    // 2. Check if Human can win and block
-    for (const move of availableMoves) {
-      board[move] = humanSymbol;
-      if (checkWinner(board).winner === humanSymbol) {
-        board[move] = '';
-        return move;
+      return maxEval;
+    } else {
+      let minEval = Infinity;
+      for (const move of moves) {
+        currentBoard[move] = humanSymbol;
+        const evaluation = minimax(currentBoard, depth + 1, true, alpha, beta);
+        currentBoard[move] = null;
+        minEval = Math.min(minEval, evaluation);
+        beta = Math.min(beta, evaluation);
+        if (beta <= alpha) break;
       }
-      board[move] = '';
+      return minEval;
     }
+  };
 
-    // 3. Center preference if open
-    if (board[4] === '') return 4;
-
-    // 4. Otherwise 50% minimax / 50% random
-    if (Math.random() > 0.5) {
-      const randomIndex = Math.floor(Math.random() * availableMoves.length);
-      return availableMoves[randomIndex];
-    }
-  }
-
-  // Hard Mode: Unbeatable Minimax Strategy
-  if (availableMoves.length === 9) {
-    const strategicStarts = [4, 0, 2, 6, 8];
-    return strategicStarts[Math.floor(Math.random() * strategicStarts.length)];
-  }
-
-  let bestScore = -Infinity;
   let bestMove = availableMoves[0];
+  let bestScore = -Infinity;
 
   for (const move of availableMoves) {
-    board[move] = aiSymbol;
-    const score = minimax(board, 0, false, aiSymbol, humanSymbol);
-    board[move] = '';
+    boardClone[move] = aiSymbol;
+    const score = minimax(boardClone, 0, false, -Infinity, Infinity);
+    boardClone[move] = null;
 
     if (score > bestScore) {
       bestScore = score;
@@ -155,4 +177,19 @@ export const getBestAIMove = (board, aiSymbol, difficulty = 'hard') => {
   }
 
   return bestMove;
+};
+
+/**
+ * Unified AI move dispatcher
+ */
+export const getAIMove = (board, difficulty = 'medium', aiSymbol = 'O', humanSymbol = 'X') => {
+  switch (difficulty.toLowerCase()) {
+    case 'easy':
+      return getEasyMove(board);
+    case 'hard':
+      return getHardMove(board, aiSymbol, humanSymbol);
+    case 'medium':
+    default:
+      return getMediumMove(board, aiSymbol, humanSymbol);
+  }
 };
