@@ -13,6 +13,18 @@ export default defineConfig(({ mode }) => {
       port: 5173,
       host: true,
     },
+    build: {
+      chunkSizeWarningLimit: 1000,
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+            'ui-vendor': ['lucide-react', 'canvas-confetti'],
+            'socket-vendor': ['socket.io-client'],
+          },
+        },
+      },
+    },
   };
 });
 
