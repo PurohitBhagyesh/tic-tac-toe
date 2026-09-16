@@ -16,19 +16,17 @@ const server = http.createServer(app);
 const PORT = process.env.PORT || 5000;
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
 
-// Allowed origins for CORS (supports local development and Vercel/GitHub Pages domains)
 const allowedOrigins = [
   CLIENT_URL,
   'http://localhost:5173',
   'http://localhost:3000',
   'http://127.0.0.1:5173',
-  /\.vercel\.app$/,  // Allow all Vercel preview and production URLs
-  /github\.io$/,     // Allow GitHub Pages
+  /\.vercel\.app$/,
+  /github\.io$/,
 ];
 
 const corsOptions = {
   origin: (origin, callback) => {
-    // Allow requests with no origin (e.g. mobile apps, curl, server-to-server)
     if (!origin) return callback(null, true);
 
     const isAllowed = allowedOrigins.some((allowed) => {
@@ -41,19 +39,17 @@ const corsOptions = {
     if (isAllowed) {
       callback(null, true);
     } else {
-      console.warn(`[CORS] Blocked request from origin: ${origin}`);
-      callback(null, true); // Permissive fallback for seamless deployment testing
+      console.warn(`[CORS] Request origin blocked or checked: ${origin}`);
+      callback(null, true);
     }
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   credentials: true,
 };
 
-// Express Middlewares
 app.use(cors(corsOptions));
 app.use(express.json());
 
-// Socket.IO setup
 const io = new Server(server, {
   cors: {
     origin: '*',
@@ -63,10 +59,8 @@ const io = new Server(server, {
   pingInterval: 25000,
 });
 
-// Register Socket handlers
 setupSocketHandlers(io);
 
-// API Health Check
 app.get('/api/health', (req, res) => {
   res.status(200).json({
     status: 'online',
@@ -75,13 +69,20 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// REST Routes
 app.use('/api/rooms', roomRoutes);
-
-// Error handling middleware
 app.use(errorHandler);
 
-// Start server and initialize PostgreSQL database
+const gracefulShutdown = () => {
+  console.log('\n🛑 Received termination signal. Closing server and connections gracefully...');
+  server.close(() => {
+    console.log('👋 Express server closed.');
+    process.exit(0);
+  });
+};
+
+process.on('SIGINT', gracefulShutdown);
+process.on('SIGTERM', gracefulShutdown);
+
 server.listen(PORT, async () => {
   console.log(`🚀 Tic-Tac-Toe Server running on port ${PORT}`);
   console.log(`📡 Socket.IO initialized and listening for connections`);

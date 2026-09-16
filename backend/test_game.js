@@ -23,7 +23,6 @@ async function runTests() {
   console.log('✅ Match started, current round:', matchRes.room.match.currentRound);
 
   console.log('--- TEST 4: Authoritative Move Processing & Win Detection ---');
-  // X at 0, O at 3, X at 1, O at 4, X at 2 (X wins round 1)
   await gameService.makeMove(createRes.roomCode, createRes.player.id, 0);
   await gameService.makeMove(createRes.roomCode, joinRes.player.id, 3);
   await gameService.makeMove(createRes.roomCode, createRes.player.id, 1);
@@ -40,6 +39,19 @@ async function runTests() {
   console.assert(nextRes.success === true, 'Next round should succeed');
   console.assert(nextRes.room.match.currentRound === 2, 'Should advance to Round 2');
   console.log('✅ Advanced to Round:', nextRes.room.match.currentRound);
+
+  console.log('--- TEST 6: Forfeit / Give Up ---');
+  const giveUpRes = await gameService.giveUp(createRes.roomCode, joinRes.player.id);
+  console.assert(giveUpRes.success === true, 'Give up should succeed');
+  console.assert(giveUpRes.room.match.matchEnded === true, 'Match should end on give up');
+  console.log('✅ Give up processed, winner:', giveUpRes.room.match.winner?.name);
+
+  console.log('--- TEST 7: Rematch Sync ---');
+  await gameService.requestRematch(createRes.roomCode, createRes.player.id);
+  const rematchRes = await gameService.requestRematch(createRes.roomCode, joinRes.player.id);
+  console.assert(rematchRes.success === true, 'Rematch trigger should succeed');
+  console.assert(rematchRes.room.match.currentRound === 1, 'Rematch should reset to round 1');
+  console.log('✅ Rematch triggered, reset match round:', rematchRes.room.match.currentRound);
 
   console.log('\n🎉 ALL BACKEND UNIT TESTS PASSED SUCCESSFULLY!\n');
 }
