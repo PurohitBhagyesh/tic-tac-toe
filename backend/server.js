@@ -5,7 +5,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import roomRoutes from './routes/roomRoutes.js';
 import { setupSocketHandlers } from './socket/gameSocket.js';
-import { initDatabase } from './database/database.js';
+import { initDatabase, pool } from './database/database.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
 dotenv.config();
@@ -39,8 +39,8 @@ const corsOptions = {
     if (isAllowed) {
       callback(null, true);
     } else {
-      console.warn(`[CORS] Request origin blocked or checked: ${origin}`);
-      callback(null, true);
+      console.warn(`[CORS] Request origin blocked by CORS policy: ${origin}`);
+      callback(new Error(`CORS policy error: Origin ${origin} is not allowed`));
     }
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -74,8 +74,16 @@ app.use(errorHandler);
 
 const gracefulShutdown = () => {
   console.log('\n🛑 Received termination signal. Closing server and connections gracefully...');
-  server.close(() => {
+  server.close(async () => {
     console.log('👋 Express server closed.');
+    if (pool && typeof pool.end === 'function') {
+      try {
+        await pool.end();
+        console.log('🗄️ Database pool closed.');
+      } catch (err) {
+        console.error('Error closing database pool:', err);
+      }
+    }
     process.exit(0);
   });
 };

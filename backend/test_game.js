@@ -53,6 +53,37 @@ async function runTests() {
   console.assert(rematchRes.room.match.currentRound === 1, 'Rematch should reset to round 1');
   console.log('✅ Rematch triggered, reset match round:', rematchRes.room.match.currentRound);
 
+  console.log('--- TEST 8: Draw Scenario Validation ---');
+  const drawRoom = await roomService.createRoom('Draw P1');
+  const drawP2 = await roomService.joinRoom(drawRoom.roomCode, 'Draw P2');
+  await roomService.setPlayerReady(drawRoom.roomCode, drawRoom.player.id, true);
+  await roomService.setPlayerReady(drawRoom.roomCode, drawP2.player.id, true);
+  await gameService.startMatch(drawRoom.roomCode);
+
+  await gameService.makeMove(drawRoom.roomCode, drawRoom.player.id, 0);
+  await gameService.makeMove(drawRoom.roomCode, drawP2.player.id, 1);
+  await gameService.makeMove(drawRoom.roomCode, drawRoom.player.id, 2);
+  await gameService.makeMove(drawRoom.roomCode, drawP2.player.id, 4);
+  await gameService.makeMove(drawRoom.roomCode, drawRoom.player.id, 3);
+  await gameService.makeMove(drawRoom.roomCode, drawP2.player.id, 5);
+  await gameService.makeMove(drawRoom.roomCode, drawRoom.player.id, 7);
+  await gameService.makeMove(drawRoom.roomCode, drawP2.player.id, 6);
+  const drawMove = await gameService.makeMove(drawRoom.roomCode, drawRoom.player.id, 8);
+
+  console.assert(drawMove.roundEnded === true, 'Round should end on full board draw');
+  console.assert(drawMove.isDraw === true, 'Round status should be draw');
+  console.log('✅ Draw scenario verified successfully');
+
+  console.log('--- TEST 9: Invalid Out-of-Turn Move Prevention ---');
+  const moveTurnCheck = await gameService.makeMove(drawRoom.roomCode, drawP2.player.id, 0);
+  console.assert(moveTurnCheck.success === false, 'Move out of turn or after round end should be rejected');
+  console.log('✅ Invalid out-of-turn move properly rejected');
+
+  console.log('--- TEST 10: Non-Existent Room Handling ---');
+  const invalidJoin = await roomService.joinRoom('000000', 'Test');
+  console.assert(invalidJoin.success === false, 'Joining non-existent room should fail gracefully');
+  console.log('✅ Non-existent room handling verified');
+
   console.log('\n🎉 ALL BACKEND UNIT TESTS PASSED SUCCESSFULLY!\n');
 }
 
