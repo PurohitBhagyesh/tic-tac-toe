@@ -84,6 +84,16 @@ async function runTests() {
   console.assert(invalidJoin.success === false, 'Joining non-existent room should fail gracefully');
   console.log('✅ Non-existent room handling verified');
 
+  console.log('--- TEST 11: Out-of-Bounds Move Check ---');
+  const testRoom = await roomService.createRoom('Bounds P1');
+  const boundsP2 = await roomService.joinRoom(testRoom.roomCode, 'Bounds P2');
+  await roomService.setPlayerReady(testRoom.roomCode, testRoom.player.id, true);
+  await roomService.setPlayerReady(testRoom.roomCode, boundsP2.player.id, true);
+  await gameService.startMatch(testRoom.roomCode);
+  const oobMove = await gameService.makeMove(testRoom.roomCode, testRoom.player.id, 99);
+  console.assert(oobMove.success === false, 'Out of bounds move cell index should be rejected');
+  console.log('✅ Out-of-bounds move rejection verified');
+
   console.log('\n🎉 ALL BACKEND UNIT TESTS PASSED SUCCESSFULLY!\n');
 }
 

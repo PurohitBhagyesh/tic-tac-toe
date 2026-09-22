@@ -61,9 +61,20 @@ const io = new Server(server, {
 
 setupSocketHandlers(io);
 
-app.get('/api/health', (req, res) => {
+app.get('/api/health', async (req, res) => {
+  let dbStatus = 'disconnected';
+  try {
+    if (pool) {
+      await pool.query('SELECT 1');
+      dbStatus = 'connected';
+    }
+  } catch (err) {
+    dbStatus = `error: ${err.message}`;
+  }
+
   res.status(200).json({
     status: 'online',
+    database: dbStatus,
     timestamp: new Date().toISOString(),
     service: 'Tic-Tac-Toe Full-Stack Backend',
   });
@@ -90,6 +101,14 @@ const gracefulShutdown = () => {
 
 process.on('SIGINT', gracefulShutdown);
 process.on('SIGTERM', gracefulShutdown);
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('⚠️ Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('💥 Uncaught Exception thrown:', err);
+});
 
 server.listen(PORT, async () => {
   console.log(`🚀 Tic-Tac-Toe Server running on port ${PORT}`);
