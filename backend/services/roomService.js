@@ -1,16 +1,16 @@
 import { v4 as uuidv4 } from 'uuid';
 
-const roomStore = new Map();
+const rooms = new Map();
 
-export function generateRoomCode() {
+function generateRoomCode() {
   let code;
   do {
     code = Math.floor(100000 + Math.random() * 900000).toString();
-  } while (roomStore.has(code));
+  } while (rooms.has(code));
   return code;
 }
 
-export async function createRoom(hostName = 'Player 1') {
+export async function createRoom(hostName) {
   const roomCode = generateRoomCode();
   const hostId = uuidv4();
 
@@ -25,32 +25,33 @@ export async function createRoom(hostName = 'Player 1') {
   };
 
   const room = {
-    id: uuidv4(),
-    roomCode,
+    code: roomCode,
     status: 'waiting',
-    currentRound: 1,
-    maxRounds: 5,
-    turnPlayerId: hostId,
     players: [hostPlayer],
-    board: Array(9).fill(''),
-    winningLine: null,
-    matchEnded: false,
-    winner: null,
-    rematchVotes: new Set(),
+    match: null,
+    createdAt: new Date().toISOString(),
   };
 
-  roomStore.set(roomCode, room);
+  rooms.set(roomCode, room);
 
   return {
     success: true,
     roomCode,
-    room,
     player: hostPlayer,
+    room,
   };
 }
 
-export async function joinRoom(roomCode, playerName = 'Player 2') {
-  const room = roomStore.get(roomCode);
+export async function getRoom(roomCode) {
+  const room = rooms.get(roomCode);
+  if (!room) {
+    return { success: false, error: 'Room not found' };
+  }
+  return { success: true, room };
+}
+
+export async function joinRoom(roomCode, playerName) {
+  const room = rooms.get(roomCode);
   if (!room) {
     return { success: false, error: 'Room not found' };
   }
@@ -59,9 +60,8 @@ export async function joinRoom(roomCode, playerName = 'Player 2') {
     return { success: false, error: 'Room is full' };
   }
 
-  const guestId = uuidv4();
   const guestPlayer = {
-    id: guestId,
+    id: uuidv4(),
     name: playerName || 'Player 2',
     symbol: 'O',
     isHost: false,
@@ -75,48 +75,47 @@ export async function joinRoom(roomCode, playerName = 'Player 2') {
 
   return {
     success: true,
-    roomCode,
-    room,
     player: guestPlayer,
+    room,
   };
 }
 
-export async function getRoom(roomCode) {
-  const room = roomStore.get(roomCode);
-  if (!room) return null;
-  return room;
-}
-
-export async function setPlayerReady(roomCode, playerId, isReady = true) {
-  const room = roomStore.get(roomCode);
-  if (!room) return { success: false, error: 'Room not found' };
-
-  const player = room.players.find((p) => p.id === playerId);
-  if (!player) return { success: false, error: 'Player not found' };
-
-  player.isReady = isReady;
-
-  const allReady = room.players.length === 2 && room.players.every((p) => p.isReady);
-  if (allReady) {
-    room.status = 'ready';
+export async function setPlayerReady(roomCode, playerId, ready = true) {
+  const room = rooms.get(roomCode);
+  if (!room) {
+    return { success: false, error: 'Room not found' };
   }
 
+  const player = room.players.find((p) => p.id === playerId);
+  if (!player) {
+    return { success: false, error: 'Player not found' };
+  }
+
+  player.isReady = ready;
   return { success: true, room };
 }
 
 export async function leaveRoom(roomCode, playerId) {
-  const room = roomStore.get(roomCode);
-  if (!room) return { success: false, error: 'Room not found' };
+  const room = rooms.get(roomCode);
+  if (!room) {
+    return { success: false, error: 'Room not found' };
+  }
 
   room.players = room.players.filter((p) => p.id !== playerId);
+
   if (room.players.length === 0) {
-    roomStore.delete(roomCode);
-  } else {
-    room.status = 'waiting';
+    rooms.delete(roomCode);
+    return { success: true, message: 'Room deleted' };
+  }
+
+  if (room.players.length > 0 && !room.players.some((p) => p.isHost)) {
     room.players[0].isHost = true;
   }
 
+  room.status = 'waiting';
   return { success: true, room };
 }
 
-export { roomStore };
+export function getAllRooms() {
+  return Array.from(rooms.values());
+}

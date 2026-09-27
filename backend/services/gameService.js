@@ -1,198 +1,207 @@
-import { roomStore } from './roomService.js';
+import { getRoom } from './roomService.js';
 
-const WINNING_COMBINATIONS = [
+const WINNING_PATTERNS = [
   [0, 1, 2], [3, 4, 5], [6, 7, 8],
   [0, 3, 6], [1, 4, 7], [2, 5, 8],
-  [0, 4, 8], [2, 4, 6]
+  [0, 4, 8], [2, 4, 6],
 ];
 
-function checkWinner(board) {
-  for (const combo of WINNING_COMBINATIONS) {
-    const [a, b, c] = combo;
+export function checkWinningPattern(board) {
+  for (const pattern of WINNING_PATTERNS) {
+    const [a, b, c] = pattern;
     if (board[a] && board[a] === board[b] && board[a] === board[c]) {
-      return { winnerSymbol: board[a], winningLine: combo };
+      return { winnerSymbol: board[a], pattern };
     }
   }
   return null;
 }
 
-function checkDraw(board) {
-  const winnerInfo = checkWinner(board);
-  if (winnerInfo) return false;
-  return board.every((cell) => cell !== '' && cell !== null);
-}
-
 export async function startMatch(roomCode) {
-  const room = roomStore.get(roomCode);
-  if (!room) return { success: false, error: 'Room not found' };
+  const roomRes = await getRoom(roomCode);
+  if (!roomRes.success) return roomRes;
 
+  const room = roomRes.room;
   if (room.players.length < 2) {
-    return { success: false, error: 'Need 2 players to start' };
+    return { success: false, error: 'At least two players required to start match' };
   }
 
+  const hostPlayer = room.players.find((p) => p.isHost) || room.players[0];
+
   room.status = 'playing';
-  room.currentRound = 1;
-  room.board = Array(9).fill('');
-  room.winningLine = null;
-  room.matchEnded = false;
-  room.winner = null;
-  room.rematchVotes.clear();
-
-  room.players.forEach((p) => {
-    p.score = 0;
-  });
-
-  const hostPlayer = room.players.find((p) => p.isHost);
-  room.turnPlayerId = hostPlayer ? hostPlayer.id : room.players[0].id;
-
-  return {
-    success: true,
-    room: formatRoomState(room),
+  room.match = {
+    currentRound: 1,
+    maxRounds: 5,
+    scores: { X: 0, O: 0 },
+    turnPlayerId: hostPlayer.id,
+    starterPlayerId: hostPlayer.id,
+    board: Array(9).fill(''),
+    roundEnded: false,
+    matchEnded: false,
+    winner: null,
+    rematchRequests: new Set(),
   };
+
+  room.players.forEach((p) => (p.score = 0));
+
+  return { success: true, room };
 }
 
 export async function makeMove(roomCode, playerId, cellIndex) {
-  const room = roomStore.get(roomCode);
-  if (!room) return { success: false, error: 'Room not found' };
+  const roomRes = await getRoom(roomCode);
+  if (!roomRes.success) return roomRes;
 
-  if (room.status !== 'playing') {
-    return { success: false, error: 'Game is not in playing state' };
+  const room = roomRes.room;
+  if (!room.match) {
+    return { success: false, error: 'Match has not started yet' };
   }
 
-  if (room.turnPlayerId !== playerId) {
+  const { match, players } = room;
+
+  if (match.matchEnded || match.roundEnded) {
+    return { success: false, error: 'Round or match is already finished' };
+  }
+
+  if (cellIndex < 0 || cellIndex > 8) {
+    return { success: false, error: 'Invalid cell index' };
+  }
+
+  if (match.turnPlayerId !== playerId) {
     return { success: false, error: 'Not your turn' };
   }
 
-  if (cellIndex < 0 || cellIndex > 8 || room.board[cellIndex] !== '') {
-    return { success: false, error: 'Invalid cell index or cell already occupied' };
+  if (match.board[cellIndex] !== '') {
+    return { success: false, error: 'Cell is already occupied' };
   }
 
-  const currentPlayer = room.players.find((p) => p.id === playerId);
-  if (!currentPlayer) return { success: false, error: 'Player not found' };
+  const currentPlayer = players.find((p) => p.id === playerId);
+  if (!currentPlayer) {
+    return { success: false, error: 'Player not found in room' };
+  }
 
-  room.board[cellIndex] = currentPlayer.symbol;
+  match.board[cellIndex] = currentPlayer.symbol;
 
-  const winResult = checkWinner(room.board);
-  const isDraw = checkDraw(room.board);
-
-  let roundEnded = false;
-  let roundWinner = null;
-
+  const winResult = checkWinningPattern(match.board);
   if (winResult) {
-    roundEnded = true;
-    roundWinner = currentPlayer;
-    currentPlayer.score += 1;
-    room.winningLine = winResult.winningLine;
-  } else if (isDraw) {
-    roundEnded = true;
-    roundWinner = null;
-  }
+    match.roundEnded = true;
+    match.scores[currentPlayer.symbol] = (match.scores[currentPlayer.symbol] || 0) + 1;
+    currentPlayer.score = match.scores[currentPlayer.symbol];
 
-  if (roundEnded) {
-    const p1 = room.players[0];
-    const p2 = room.players[1];
-
-    if (room.currentRound >= room.maxRounds || Math.abs(p1.score - p2.score) > (room.maxRounds - room.currentRound)) {
-      room.matchEnded = true;
-      room.status = 'finished';
-      if (p1.score > p2.score) room.winner = p1;
-      else if (p2.score > p1.score) room.winner = p2;
-      else room.winner = null;
+    if (match.currentRound >= match.maxRounds) {
+      match.matchEnded = true;
+      const winnerSymbol = match.scores.X > match.scores.O ? 'X' : match.scores.O > match.scores.X ? 'O' : null;
+      match.winner = players.find((p) => p.symbol === winnerSymbol) || null;
     }
-  } else {
-    const nextPlayer = room.players.find((p) => p.id !== playerId);
-    if (nextPlayer) room.turnPlayerId = nextPlayer.id;
+
+    return {
+      success: true,
+      roundEnded: true,
+      isDraw: false,
+      winPattern: winResult.pattern,
+      room,
+    };
   }
+
+  const isFull = match.board.every((cell) => cell !== '');
+  if (isFull) {
+    match.roundEnded = true;
+
+    if (match.currentRound >= match.maxRounds) {
+      match.matchEnded = true;
+      const winnerSymbol = match.scores.X > match.scores.O ? 'X' : match.scores.O > match.scores.X ? 'O' : null;
+      match.winner = players.find((p) => p.symbol === winnerSymbol) || null;
+    }
+
+    return {
+      success: true,
+      roundEnded: true,
+      isDraw: true,
+      room,
+    };
+  }
+
+  const otherPlayer = players.find((p) => p.id !== playerId);
+  match.turnPlayerId = otherPlayer ? otherPlayer.id : playerId;
 
   return {
     success: true,
-    roundEnded,
-    roundWinner,
-    isDraw,
-    winningLine: room.winningLine,
-    room: formatRoomState(room),
+    roundEnded: false,
+    isDraw: false,
+    room,
   };
 }
 
 export async function nextRound(roomCode) {
-  const room = roomStore.get(roomCode);
-  if (!room) return { success: false, error: 'Room not found' };
+  const roomRes = await getRoom(roomCode);
+  if (!roomRes.success) return roomRes;
 
-  if (room.matchEnded) {
-    return { success: false, error: 'Match has ended. Request rematch instead.' };
+  const room = roomRes.room;
+  if (!room.match) {
+    return { success: false, error: 'No active match found' };
   }
 
-  room.currentRound += 1;
-  room.board = Array(9).fill('');
-  room.winningLine = null;
+  const { match, players } = room;
+  match.currentRound += 1;
+  match.board = Array(9).fill('');
+  match.roundEnded = false;
 
-  const starterIndex = (room.currentRound - 1) % 2;
-  room.turnPlayerId = room.players[starterIndex].id;
+  const prevStarter = players.find((p) => p.id === match.starterPlayerId);
+  const nextStarter = players.find((p) => p.id !== match.starterPlayerId) || prevStarter;
 
-  return {
-    success: true,
-    room: formatRoomState(room),
-  };
+  match.starterPlayerId = nextStarter.id;
+  match.turnPlayerId = nextStarter.id;
+
+  return { success: true, room };
 }
 
 export async function giveUp(roomCode, playerId) {
-  const room = roomStore.get(roomCode);
-  if (!room) return { success: false, error: 'Room not found' };
+  const roomRes = await getRoom(roomCode);
+  if (!roomRes.success) return roomRes;
 
-  const winner = room.players.find((p) => p.id !== playerId);
-  if (winner) {
-    winner.score += (room.maxRounds - room.currentRound + 1);
+  const room = roomRes.room;
+  if (!room.match) {
+    return { success: false, error: 'No active match found' };
   }
 
-  room.matchEnded = true;
-  room.status = 'finished';
-  room.winner = winner || null;
+  const forfeitPlayer = room.players.find((p) => p.id === playerId);
+  const winnerPlayer = room.players.find((p) => p.id !== playerId);
 
-  return {
-    success: true,
-    room: formatRoomState(room),
-  };
+  room.match.matchEnded = true;
+  room.match.roundEnded = true;
+  room.match.winner = winnerPlayer || null;
+
+  return { success: true, room };
 }
 
 export async function requestRematch(roomCode, playerId) {
-  const room = roomStore.get(roomCode);
-  if (!room) return { success: false, error: 'Room not found' };
+  const roomRes = await getRoom(roomCode);
+  if (!roomRes.success) return roomRes;
 
-  room.rematchVotes.add(playerId);
-
-  const bothVoted = room.players.length === 2 && room.players.every((p) => room.rematchVotes.has(p.id));
-
-  if (bothVoted) {
-    return await startMatch(roomCode);
+  const room = roomRes.room;
+  if (!room.match) {
+    return { success: false, error: 'No match state to rematch' };
   }
 
-  return {
-    success: true,
-    waitingForOther: true,
-    room: formatRoomState(room),
-  };
-}
+  if (!room.match.rematchRequests) {
+    room.match.rematchRequests = new Set();
+  }
 
-function formatRoomState(room) {
-  const scores = {};
-  room.players.forEach((p) => {
-    scores[p.symbol] = p.score;
-  });
+  room.match.rematchRequests.add(playerId);
 
-  return {
-    id: room.id,
-    roomCode: room.roomCode,
-    status: room.status,
-    board: room.board,
-    turnPlayerId: room.turnPlayerId,
-    winningLine: room.winningLine,
-    players: room.players,
-    match: {
-      currentRound: room.currentRound,
-      maxRounds: room.maxRounds,
-      scores,
-      matchEnded: room.matchEnded,
-      winner: room.winner,
-    },
-  };
+  if (room.match.rematchRequests.size >= 2 || room.players.length === 1) {
+    const hostPlayer = room.players.find((p) => p.isHost) || room.players[0];
+
+    room.match.currentRound = 1;
+    room.match.scores = { X: 0, O: 0 };
+    room.match.board = Array(9).fill('');
+    room.match.roundEnded = false;
+    room.match.matchEnded = false;
+    room.match.winner = null;
+    room.match.starterPlayerId = hostPlayer.id;
+    room.match.turnPlayerId = hostPlayer.id;
+    room.match.rematchRequests.clear();
+
+    room.players.forEach((p) => (p.score = 0));
+  }
+
+  return { success: true, room };
 }
